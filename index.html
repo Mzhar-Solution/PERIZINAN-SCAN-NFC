@@ -1,51 +1,367 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aplikasi Scan Izin NFC</title>
-  <style>
-    body { font-family: Arial, sans-serif; text-align: center; padding: 20px; background-color: #f4f4f9; }
-    .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 400px; margin: auto; }
-    button { background-color: #0070f3; color: white; border: none; padding: 12px 20px; font-size: 16px; border-radius: 6px; cursor: pointer; }
-    #status { margin-top: 20px; font-weight: bold; word-break: break-all; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Perizinan Santri NFC</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+:root{--bg:#f3f5f2;--card:#fff;--ink:#17261f;--mute:#5d6b63;--line:#dce3de;--pri:#14532d;--pri-ink:#fff;--ok:#166534;--okbg:#dcfce7;--err:#991b1b;--errbg:#fee2e2;--warn:#92400e;--warnbg:#fef3c7}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+header{background:var(--pri);color:var(--pri-ink);padding:14px 16px;position:sticky;top:0;z-index:5}
+header h1{margin:0;font-size:17px}
+nav{display:flex;gap:4px;overflow-x:auto;margin-top:10px}
+nav button{background:transparent;color:#d1e7d9;border:0;padding:8px 14px;border-radius:8px;font:inherit;cursor:pointer;white-space:nowrap}
+nav button.on{background:#fff;color:var(--pri);font-weight:600}
+main{max-width:1000px;margin:0 auto;padding:16px}
+section{display:none}section.on{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:16px}
+.stat b{display:block;font-size:34px;line-height:1.1}.stat span{color:var(--mute)}
+h2{margin:0 0 12px;font-size:17px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+label{display:block;font-size:13px;color:var(--mute);margin-bottom:3px}
+input,select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;font:inherit;background:#fff;color:var(--ink)}
+input:focus,select:focus,button:focus-visible{outline:2px solid var(--pri);outline-offset:1px}
+.btn{background:var(--pri);color:#fff;border:0;padding:9px 16px;border-radius:8px;font:inherit;cursor:pointer}
+.btn.sec{background:#e8eee9;color:var(--ink)}.btn.red{background:var(--err)}.btn.sm{padding:4px 10px;font-size:13px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.tools input,.tools select{flex:1;min-width:150px;width:auto}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{color:var(--mute);font-weight:600;font-size:13px}
+.empty{color:var(--mute);text-align:center;padding:20px}
+.scan{text-align:center;padding:28px 16px}
+.res{margin-top:16px;padding:18px;border-radius:12px;font-size:17px;font-weight:600;display:none}
+.res.ok{display:block;background:var(--okbg);color:var(--ok)}
+.res.err{display:block;background:var(--errbg);color:var(--err)}
+.res.warn{display:block;background:var(--warnbg);color:var(--warn)}
+.pulse{width:14px;height:14px;border-radius:50%;background:#16a34a;display:inline-block;margin-right:8px;animation:p 1.2s infinite}
+@keyframes p{50%{opacity:.25}}
+@media(prefers-reduced-motion:reduce){.pulse{animation:none}}
+dialog{border:0;border-radius:12px;padding:20px;width:min(560px,94vw)}
+dialog::backdrop{background:rgba(0,0,0,.4)}
+#toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:8px;display:none;z-index:20;max-width:90vw}
+small.hint{color:var(--mute)}
+</style>
 </head>
 <body>
+<header>
+  <h1>Perizinan Santri Berbasis NFC</h1>
+  <nav id="nav">
+    <button data-t="dash" class="on">Dashboard</button>
+    <button data-t="scan">Scan Izin</button>
+    <button data-t="master">Data Santri</button>
+    <button data-t="log">Log Perizinan</button>
+  </nav>
+</header>
 
+<main>
+<!-- DASHBOARD -->
+<section id="dash" class="on">
+  <div class="stats">
+    <div class="card stat"><b id="stTotal">–</b><span>Total santri terdaftar</span></div>
+    <div class="card stat"><b id="stIzin">–</b><span>Santri izin bulan ini</span></div>
+  </div>
+</section>
+
+<!-- SCAN -->
+<section id="scan">
+  <div class="card scan">
+    <h2>Scan Kartu NFC</h2>
+    <p id="nfcInfo" style="color:var(--mute);margin-top:0">Tempelkan kartu santri ke bagian belakang HP setelah scan dimulai.</p>
+    <button class="btn" id="btnScan">Mulai Scan</button>
+    <div id="scanState" style="margin-top:14px;display:none"><span class="pulse"></span>Menunggu kartu…</div>
+    <div id="result" class="res" role="status" aria-live="polite"></div>
+  </div>
+</section>
+
+<!-- MASTER -->
+<section id="master">
   <div class="card">
-    <h2>Scan Izin Keluar (NFC)</h2>
-    <p>Tempelkan kartu/tag NFC ke bagian belakang HP kamu.</p>
-    <button id="scanBtn">Mulai Scan NFC</button>
-    <div id="status">Status: Siap scan...</div>
+    <h2>Tambah Santri</h2>
+    <form id="formAdd" class="grid">
+      <div><label>No. Reg *</label><input name="no_reg" required></div>
+      <div><label>Nama *</label><input name="nama" required></div>
+      <div><label>Alamat</label><input name="alamat"></div>
+      <div><label>Asrama</label><input name="asrama"></div>
+      <div><label>Kamar</label><input name="kamar"></div>
+      <div><label>NFC UID (opsional)</label><input name="nfc_uid" placeholder="04:A1:B2:..."></div>
+      <div style="align-self:end"><button class="btn" type="submit">Simpan</button></div>
+    </form>
   </div>
 
-  <script>
-    const scanBtn = document.getElementById('scanBtn');
-    const statusDiv = document.getElementById('status');
+  <div class="card">
+    <h2>Import Excel</h2>
+    <small class="hint">Kolom: NoReg, Nama, Alamat, Asrama, Kamar, NFC_UID (opsional). Data dengan NoReg yang sama akan diperbarui.</small>
+    <div class="row">
+      <input type="file" id="fileXls" accept=".xlsx,.xls,.csv" style="flex:1;min-width:200px">
+      <button class="btn" id="btnImport">Import</button>
+      <button class="btn sec" id="btnTpl">Unduh template</button>
+    </div>
+    <div id="importMsg" style="margin-top:8px"></div>
+  </div>
 
-    scanBtn.addEventListener('click', async () => {
-      if ('NDEFReader' in window) {
-        try {
-          const ndef = new NDEFReader();
-          await ndef.scan();
-          statusDiv.innerText = "Status: Dekatkan kartu NFC sekarang...";
+  <div class="card">
+    <h2>Daftar Santri</h2>
+    <div class="tools"><input id="qSantri" type="search" placeholder="Cari nama, No. Reg, asrama, kamar…"></div>
+    <div class="tw"><table>
+      <thead><tr><th>No. Reg</th><th>Nama</th><th>Asrama</th><th>Kamar</th><th>Alamat</th><th>NFC UID</th><th></th></tr></thead>
+      <tbody id="tbSantri"></tbody>
+    </table></div>
+  </div>
+</section>
 
-          ndef.addEventListener("readingerror", () => {
-            statusDiv.innerText = "Gagal membaca tag NFC!";
-          });
+<!-- LOG -->
+<section id="log">
+  <div class="card">
+    <h2>Log Perizinan</h2>
+    <div class="tools">
+      <select id="fRange">
+        <option value="day">Hari ini</option>
+        <option value="week">7 hari terakhir</option>
+        <option value="month" selected>Bulan ini</option>
+      </select>
+      <input id="qLog" type="search" placeholder="Cari nama / No. Reg…">
+    </div>
+    <div class="tw"><table>
+      <thead><tr><th>Waktu</th><th>No. Reg</th><th>Nama</th><th>Keterangan</th></tr></thead>
+      <tbody id="tbLog"></tbody>
+    </table></div>
+  </div>
+</section>
+</main>
 
-          ndef.addEventListener("reading", ({ message, serialNumber }) => {
-            statusDiv.innerHTML = `<span style="color:green">Berhasil!</span><br>ID Kartu: ${serialNumber}`;
-          });
-        } catch (error) {
-          statusDiv.innerText = "Error: " + error;
-        }
-      } else {
-        statusDiv.innerText = "Fitur NFC tidak didukung di browser ini. Pastikan memakai Chrome di Android dengan NFC aktif.";
-      }
+<!-- EDIT DIALOG -->
+<dialog id="dlgEdit">
+  <h2>Edit Santri</h2>
+  <form id="formEdit" class="grid">
+    <input type="hidden" name="id">
+    <div><label>No. Reg *</label><input name="no_reg" required></div>
+    <div><label>Nama *</label><input name="nama" required></div>
+    <div><label>Alamat</label><input name="alamat"></div>
+    <div><label>Asrama</label><input name="asrama"></div>
+    <div><label>Kamar</label><input name="kamar"></div>
+    <div><label>NFC UID</label><input name="nfc_uid" id="editUid" placeholder="Kosongkan jika belum ada"></div>
+  </form>
+  <div class="row">
+    <button class="btn" id="btnEditSave">Simpan perubahan</button>
+    <button class="btn sec" id="btnEditScan" type="button">Scan kartu baru</button>
+    <button class="btn sec" id="btnEditCancel" type="button">Batal</button>
+  </div>
+</dialog>
+<div id="toast"></div>
+
+<script>
+/* ====== KONFIGURASI ====== */
+const SUPABASE_URL = 'https://alsjmuelqpocvipptoht.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFsc2ptdWVscXBvY3ZpcHB0b2h0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE1NTk1ODksImV4cCI6MjEwNzEzNTU4OX0.6ZcAdLr-6ZWPdOVtRPj2w0hazZPkvzz7gd-MY8Bslfs';
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+/* ====== UTIL ====== */
+const $ = s => document.querySelector(s);
+const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const clean = v => { v = String(v ?? '').trim(); return v === '' ? null : v; };
+const fmt = d => new Date(d).toLocaleString('id-ID', {dateStyle:'medium', timeStyle:'short'});
+const monthStart = () => { const n = new Date(); return new Date(n.getFullYear(), n.getMonth(), 1).toISOString(); };
+let tt; function toast(m){ const t=$('#toast'); t.textContent=m; t.style.display='block'; clearTimeout(tt); tt=setTimeout(()=>t.style.display='none',3000); }
+function debounce(fn, ms=300){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a),ms); }; }
+const normUid = u => clean(u)?.toUpperCase().replace(/[^0-9A-F]/g, ':').replace(/:+/g, ':') ?? null;
+
+async function fetchAll(build){ // lewati batas 1000 baris Supabase
+  let all = [], from = 0;
+  while (true) {
+    const { data, error } = await build().range(from, from + 999);
+    if (error) throw error;
+    all = all.concat(data);
+    if (data.length < 1000) return all;
+    from += 1000;
+  }
+}
+
+/* ====== NAVIGASI ====== */
+$('#nav').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  document.querySelectorAll('nav button').forEach(x => x.classList.toggle('on', x === b));
+  document.querySelectorAll('main section').forEach(s => s.classList.toggle('on', s.id === b.dataset.t));
+  if (b.dataset.t !== 'scan') stopScan();
+  ({dash: loadDash, master: loadSantri, log: loadLog}[b.dataset.t] || (()=>{}))();
+});
+
+/* ====== DASHBOARD ====== */
+async function loadDash(){
+  try {
+    const { count } = await db.from('santri').select('*', { count:'exact', head:true });
+    $('#stTotal').textContent = count ?? 0;
+    const rows = await fetchAll(() => db.from('riwayat_izin').select('no_reg').gte('created_at', monthStart()));
+    $('#stIzin').textContent = new Set(rows.map(r => r.no_reg)).size;
+  } catch(e){ toast('Gagal memuat dashboard: ' + e.message); }
+}
+
+/* ====== MASTER SANTRI ====== */
+let santriCache = [];
+async function loadSantri(){
+  try {
+    santriCache = await fetchAll(() => db.from('santri').select('*').order('nama'));
+    renderSantri();
+  } catch(e){ toast('Gagal memuat santri: ' + e.message); }
+}
+function renderSantri(){
+  const q = $('#qSantri').value.trim().toLowerCase();
+  const rows = santriCache.filter(s => !q || [s.no_reg,s.nama,s.asrama,s.kamar,s.alamat].some(v => (v||'').toLowerCase().includes(q)));
+  $('#tbSantri').innerHTML = rows.length ? rows.map(s => `
+    <tr><td>${esc(s.no_reg)}</td><td>${esc(s.nama)}</td><td>${esc(s.asrama)}</td><td>${esc(s.kamar)}</td>
+    <td>${esc(s.alamat)}</td><td>${esc(s.nfc_uid) || '<small class="hint">belum ada</small>'}</td>
+    <td><button class="btn sm sec" data-edit="${s.id}">Edit</button>
+        <button class="btn sm red" data-del="${s.id}">Hapus</button></td></tr>`).join('')
+    : '<tr><td colspan="7" class="empty">Belum ada data santri.</td></tr>';
+}
+$('#qSantri').addEventListener('input', debounce(renderSantri, 150));
+
+$('#formAdd').addEventListener('submit', async e => {
+  e.preventDefault();
+  const f = Object.fromEntries(new FormData(e.target));
+  const row = { no_reg: f.no_reg.trim(), nama: f.nama.trim(), alamat: clean(f.alamat), asrama: clean(f.asrama), kamar: clean(f.kamar), nfc_uid: normUid(f.nfc_uid) };
+  const { error } = await db.from('santri').insert(row);
+  if (error) return toast(error.code === '23505' ? 'No. Reg atau NFC UID sudah dipakai.' : 'Gagal: ' + error.message);
+  e.target.reset(); toast('Santri ditambahkan.'); loadSantri();
+});
+
+$('#tbSantri').addEventListener('click', async e => {
+  const ed = e.target.closest('[data-edit]'), del = e.target.closest('[data-del]');
+  if (ed) {
+    const s = santriCache.find(x => x.id === ed.dataset.edit);
+    const f = $('#formEdit');
+    for (const k of ['id','no_reg','nama','alamat','asrama','kamar','nfc_uid']) f.elements[k].value = s[k] ?? '';
+    $('#dlgEdit').showModal();
+  }
+  if (del) {
+    const s = santriCache.find(x => x.id === del.dataset.del);
+    if (!confirm(`Hapus ${s.nama} (${s.no_reg})? Riwayat izinnya juga ikut terhapus.`)) return;
+    const { error } = await db.from('santri').delete().eq('id', s.id);
+    if (error) return toast('Gagal hapus: ' + error.message);
+    toast('Santri dihapus.'); loadSantri();
+  }
+});
+
+$('#btnEditCancel').onclick = () => { stopScan(); $('#dlgEdit').close(); };
+$('#btnEditSave').onclick = async () => {
+  const f = $('#formEdit'); if (!f.reportValidity()) return;
+  const v = Object.fromEntries(new FormData(f));
+  const { error } = await db.from('santri').update({
+    no_reg: v.no_reg.trim(), nama: v.nama.trim(), alamat: clean(v.alamat),
+    asrama: clean(v.asrama), kamar: clean(v.kamar), nfc_uid: normUid(v.nfc_uid)
+  }).eq('id', v.id);
+  if (error) return toast(error.code === '23505' ? 'No. Reg atau NFC UID sudah dipakai santri lain.' : 'Gagal: ' + error.message);
+  stopScan(); $('#dlgEdit').close(); toast('Perubahan disimpan.'); loadSantri();
+};
+// Scan kartu baru langsung ke kolom NFC UID (untuk kartu hilang/ganti)
+$('#btnEditScan').onclick = async () => {
+  await startScan(sn => { $('#editUid').value = normUid(sn); toast('UID terbaca. Klik "Simpan perubahan".'); stopScan(); });
+};
+
+/* ====== IMPORT / TEMPLATE EXCEL ====== */
+$('#btnTpl').onclick = () => {
+  const ws = XLSX.utils.aoa_to_sheet([['NoReg','Nama','Alamat','Asrama','Kamar','NFC_UID'],['2024001','Ahmad Fulan','Surabaya','Al-Falah','A1','']]);
+  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Santri');
+  XLSX.writeFile(wb, 'template_santri.xlsx');
+};
+$('#btnImport').onclick = async () => {
+  const file = $('#fileXls').files[0], msg = $('#importMsg');
+  if (!file) return toast('Pilih file Excel dulu.');
+  const btn = $('#btnImport'); btn.disabled = true; msg.textContent = 'Membaca file…';
+  try {
+    const wb = XLSX.read(await file.arrayBuffer());
+    const raw = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval:'' });
+    const get = (r, ...keys) => { for (const k in r) if (keys.includes(k.toLowerCase().replace(/[\s_.]/g,''))) return r[k]; return ''; };
+    const map = new Map(); let skip = 0;
+    raw.forEach(r => {
+      const no_reg = String(get(r,'noreg','noregistrasi')).trim(), nama = String(get(r,'nama')).trim();
+      if (!no_reg || !nama) { skip++; return; }
+      map.set(no_reg, { no_reg, nama, alamat: clean(get(r,'alamat')), asrama: clean(get(r,'asrama')), kamar: clean(get(r,'kamar')), nfc_uid: normUid(get(r,'nfcuid','uid')) });
     });
-  </script>
+    const rows = [...map.values()];
+    for (let i = 0; i < rows.length; i += 200) {
+      msg.textContent = `Menyimpan ${Math.min(i+200, rows.length)} / ${rows.length}…`;
+      const { error } = await db.from('santri').upsert(rows.slice(i, i+200), { onConflict:'no_reg' });
+      if (error) throw error;
+    }
+    msg.innerHTML = `<span style="color:var(--ok)">Selesai: ${rows.length} santri diimpor${skip ? `, ${skip} baris dilewati (NoReg/Nama kosong)` : ''}.</span>`;
+    $('#fileXls').value = ''; loadSantri();
+  } catch(e){
+    msg.innerHTML = `<span style="color:var(--err)">Gagal import: ${esc(e.message)}${e.code==='23505' ? ' (ada NFC_UID ganda)' : ''}</span>`;
+  } finally { btn.disabled = false; }
+};
 
+/* ====== NFC ====== */
+let reader = null, abortCtl = null;
+async function startScan(onSerial){
+  if (!('NDEFReader' in window)) { showRes('err', 'Web NFC tidak didukung. Gunakan Chrome di Android dengan HTTPS dan NFC aktif.'); toast('Web NFC tidak didukung.'); return false; }
+  try {
+    stopScan();
+    abortCtl = new AbortController(); reader = new NDEFReader();
+    await reader.scan({ signal: abortCtl.signal });
+    reader.onreading = ev => onSerial(ev.serialNumber);
+    reader.onreadingerror = () => showRes('err', 'Kartu tidak bisa dibaca. Coba tempelkan ulang.');
+    $('#scanState').style.display = 'block'; $('#btnScan').textContent = 'Hentikan Scan';
+    return true;
+  } catch(e){ showRes('err', 'Gagal memulai NFC: ' + e.message); return false; }
+}
+function stopScan(){
+  if (abortCtl) abortCtl.abort(); abortCtl = reader = null;
+  $('#scanState').style.display = 'none'; $('#btnScan').textContent = 'Mulai Scan';
+}
+function showRes(type, text){ const r = $('#result'); r.className = 'res ' + type; r.textContent = text; }
+
+$('#btnScan').onclick = () => abortCtl ? stopScan() : startScan(processScan);
+
+let busy = false;
+async function processScan(serial){
+  if (busy) return; busy = true;
+  try {
+    const uid = normUid(serial);
+    const { data: s, error } = await db.from('santri').select('no_reg,nama').eq('nfc_uid', uid).maybeSingle();
+    if (error) throw error;
+    if (!s) return showRes('err', 'Kartu NFC tidak terdaftar! Jika kartu hilang/ganti, silakan perbarui nfc_uid di Master Data Santri.');
+    const { count, error: e2 } = await db.from('riwayat_izin').select('id', { count:'exact', head:true })
+      .eq('no_reg', s.no_reg).gte('created_at', monthStart());
+    if (e2) throw e2;
+    if (count >= 1) return showRes('warn', `Izin Ditolak! Santri ${s.nama} (NoReg: ${s.no_reg}) sudah menggunakan kuota 1x izin bulan ini.`);
+    const { error: e3 } = await db.from('riwayat_izin').insert({ no_reg: s.no_reg, nama: s.nama, keterangan: 'Izin via scan NFC' });
+    if (e3) throw e3;
+    showRes('ok', `Izin Disetujui untuk ${s.nama}!`);
+  } catch(e){ showRes('err', 'Terjadi kesalahan: ' + e.message); }
+  finally { setTimeout(() => busy = false, 1500); } // cegah scan ganda beruntun
+}
+
+/* ====== LOG ====== */
+function rangeStart(){
+  const n = new Date(), r = $('#fRange').value;
+  if (r === 'day')  return new Date(n.getFullYear(), n.getMonth(), n.getDate()).toISOString();
+  if (r === 'week') return new Date(n.getFullYear(), n.getMonth(), n.getDate() - 6).toISOString();
+  return monthStart();
+}
+async function loadLog(){
+  try {
+    const q = $('#qLog').value.trim().replace(/[,()%*]/g, ' ');
+    const rows = await fetchAll(() => {
+      let b = db.from('riwayat_izin').select('*').gte('created_at', rangeStart()).order('created_at', { ascending:false });
+      if (q) b = b.or(`nama.ilike.%${q}%,no_reg.ilike.%${q}%`);
+      return b;
+    });
+    $('#tbLog').innerHTML = rows.length ? rows.map(r =>
+      `<tr><td>${fmt(r.created_at)}</td><td>${esc(r.no_reg)}</td><td>${esc(r.nama)}</td><td>${esc(r.keterangan)}</td></tr>`).join('')
+      : '<tr><td colspan="4" class="empty">Tidak ada izin pada rentang ini.</td></tr>';
+  } catch(e){ toast('Gagal memuat log: ' + e.message); }
+}
+$('#fRange').addEventListener('change', loadLog);
+$('#qLog').addEventListener('input', debounce(loadLog));
+
+loadDash();
+</script>
 </body>
 </html>
