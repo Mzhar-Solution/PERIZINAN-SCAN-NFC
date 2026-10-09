@@ -73,10 +73,32 @@ small.hint{color:var(--mute)}
 <section id="scan">
   <div class="card scan">
     <h2>Scan Kartu NFC</h2>
-    <p id="nfcInfo" style="color:var(--mute);margin-top:0">Tempelkan kartu santri ke bagian belakang HP setelah scan dimulai.</p>
-    <button class="btn" id="btnScan">Mulai Scan</button>
-    <div id="scanState" style="margin-top:14px;display:none"><span class="pulse"></span>Menunggu kartu…</div>
+    <div class="tools" style="justify-content:center">
+      <div style="flex:0 1 260px"><label>Perangkat scan</label>
+        <select id="selMode">
+          <option value="web">HP Android (Web NFC)</option>
+          <option value="kb">Reader USB / PC (keyboard)</option>
+        </select></div>
+      <div id="fmtWrap" style="flex:0 1 260px;display:none"><label>Format UID dari reader</label>
+        <select id="selFmt">
+          <option value="hex">Hex (04A1B2C3 / 04:A1:B2:C3)</option>
+          <option value="hexrev">Hex, urutan byte dibalik</option>
+          <option value="dec">Desimal (mis. 3282547460)</option>
+          <option value="decrev">Desimal, urutan byte dibalik</option>
+        </select></div>
+    </div>
+    <div id="panelWeb">
+      <p style="color:var(--mute);margin-top:0">Tempelkan kartu santri ke bagian belakang HP setelah scan dimulai.</p>
+      <button class="btn" id="btnScan">Mulai Scan</button>
+      <div id="scanState" style="margin-top:14px;display:none"><span class="pulse"></span>Menunggu kartu…</div>
+    </div>
+    <div id="panelKb" style="display:none">
+      <p style="color:var(--mute);margin-top:0">Colok reader USB, lalu tempelkan kartu ke reader. Kolom di bawah harus aktif (kursor berkedip).</p>
+      <input id="kbInput" autocomplete="off" inputmode="none" placeholder="Menunggu kartu dari reader…" style="max-width:360px;text-align:center">
+      <div style="margin-top:8px"><small class="hint">UID juga bisa diketik manual lalu tekan Enter.</small></div>
+    </div>
     <div id="result" class="res" role="status" aria-live="polite"></div>
+    <div id="uidInfo" style="margin-top:8px"><small class="hint"></small></div>
   </div>
 </section>
 
@@ -90,7 +112,7 @@ small.hint{color:var(--mute)}
       <div><label>Alamat</label><input name="alamat"></div>
       <div><label>Asrama</label><input name="asrama"></div>
       <div><label>Kamar</label><input name="kamar"></div>
-      <div><label>NFC UID (opsional)</label><input name="nfc_uid" placeholder="04:A1:B2:..."></div>
+      <div><label>NFC UID (opsional)</label><input name="nfc_uid" id="addUid" placeholder="04:A1:B2:... (atau tempel kartu ke reader USB)"></div>
       <div style="align-self:end"><button class="btn" type="submit">Simpan</button></div>
     </form>
   </div>
@@ -170,7 +192,12 @@ const fmt = d => new Date(d).toLocaleString('id-ID', {dateStyle:'medium', timeSt
 const monthStart = () => { const n = new Date(); return new Date(n.getFullYear(), n.getMonth(), 1).toISOString(); };
 let tt; function toast(m){ const t=$('#toast'); t.textContent=m; t.style.display='block'; clearTimeout(tt); tt=setTimeout(()=>t.style.display='none',3000); }
 function debounce(fn, ms=300){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a),ms); }; }
-const normUid = u => clean(u)?.toUpperCase().replace(/[^0-9A-F]/g, ':').replace(/:+/g, ':') ?? null;
+const normUid = u => {
+  const s = clean(u); if (!s) return null;
+  if (/[^0-9a-fA-F:\-\s]/.test(s)) return s.toUpperCase();
+  const hex = s.replace(/[^0-9a-fA-F]/g, '');
+  return hex.length && hex.length % 2 === 0 ? hex.toUpperCase().match(/../g).join(':') : s.toUpperCase();
+};
 
 async function fetchAll(build){ // lewati batas 1000 baris Supabase
   let all = [], from = 0;
@@ -188,7 +215,7 @@ $('#nav').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
   document.querySelectorAll('nav button').forEach(x => x.classList.toggle('on', x === b));
   document.querySelectorAll('main section').forEach(s => s.classList.toggle('on', s.id === b.dataset.t));
-  if (b.dataset.t !== 'scan') stopScan();
+  if (b.dataset.t !== 'scan') stopScan(); else setTimeout(kbFocus, 50);
   ({dash: loadDash, master: loadSantri, log: loadLog}[b.dataset.t] || (()=>{}))();
 });
 
@@ -261,8 +288,16 @@ $('#btnEditSave').onclick = async () => {
 };
 // Scan kartu baru langsung ke kolom NFC UID (untuk kartu hilang/ganti)
 $('#btnEditScan').onclick = async () => {
+  if (mode() === 'kb' || !('NDEFReader' in window)) { // reader USB: UID "diketik" ke kolom ini
+    $('#editUid').value = ''; $('#editUid').focus(); return toast('Tempelkan kartu ke reader USB.');
+  }
   await startScan(sn => { $('#editUid').value = normUid(sn); toast('UID terbaca. Klik "Simpan perubahan".'); stopScan(); });
 };
+// Reader USB mengirim Enter setelah UID: konversi format, jangan kirim form
+['#addUid', '#editUid'].forEach(id => $(id).addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  e.preventDefault(); e.target.value = fmtUid(e.target.value) || '';
+}));
 
 /* ====== IMPORT / TEMPLATE EXCEL ====== */
 $('#btnTpl').onclick = () => {
@@ -299,6 +334,38 @@ $('#btnImport').onclick = async () => {
 
 /* ====== NFC ====== */
 let reader = null, abortCtl = null;
+const mode = () => $('#selMode').value;
+const revBytes = u => u && u.split(':').reverse().join(':');
+function fmtUid(raw){ // samakan format UID dari sumber apa pun ke format tersimpan
+  raw = clean(raw); if (!raw) return null;
+  const f = mode() === 'kb' ? $('#selFmt').value : 'hex';
+  if (f === 'dec' || f === 'decrev') {
+    if (!/^\d+$/.test(raw)) return normUid(raw);
+    let h = BigInt(raw).toString(16); if (h.length % 2) h = '0' + h; h = h.padStart(8, '0');
+    const u = normUid(h); return f === 'decrev' ? revBytes(u) : u;
+  }
+  const u = normUid(raw); return f === 'hexrev' ? revBytes(u) : u;
+}
+const store = { get:k => { try { return localStorage.getItem(k); } catch(e){ return null; } }, set:(k,v) => { try { localStorage.setItem(k,v); } catch(e){} } };
+function applyMode(){
+  const kb = mode() === 'kb';
+  stopScan();
+  $('#panelWeb').style.display = kb ? 'none' : ''; $('#panelKb').style.display = kb ? '' : 'none';
+  $('#fmtWrap').style.display = kb ? '' : 'none';
+  store.set('scanMode', mode()); kbFocus();
+}
+function kbFocus(){ if (mode() === 'kb' && $('#scan').classList.contains('on') && !$('#dlgEdit').open) $('#kbInput').focus(); }
+$('#selMode').addEventListener('change', applyMode);
+$('#selFmt').addEventListener('change', () => { store.set('scanFmt', $('#selFmt').value); kbFocus(); });
+let kbTimer;
+const kbSubmit = () => { clearTimeout(kbTimer); const el = $('#kbInput'), v = el.value.trim(); el.value = ''; if (v) processScan(v); };
+$('#kbInput').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); kbSubmit(); } });
+$('#kbInput').addEventListener('input', () => { clearTimeout(kbTimer); kbTimer = setTimeout(() => { if ($('#kbInput').value.trim().length >= 6) kbSubmit(); }, 500); }); // reader tanpa Enter
+$('#kbInput').addEventListener('blur', () => setTimeout(() => { if (document.activeElement === document.body) kbFocus(); }, 200));
+$('#panelKb').addEventListener('click', kbFocus);
+$('#selFmt').value = store.get('scanFmt') || 'hex';
+$('#selMode').value = store.get('scanMode') || ('NDEFReader' in window ? 'web' : 'kb');
+applyMode();
 async function startScan(onSerial){
   if (!('NDEFReader' in window)) { showRes('err', 'Web NFC tidak didukung. Gunakan Chrome di Android dengan HTTPS dan NFC aktif.'); toast('Web NFC tidak didukung.'); return false; }
   try {
@@ -323,7 +390,7 @@ let busy = false;
 async function processScan(serial){
   if (busy) return; busy = true;
   try {
-    const uid = normUid(serial);
+    const uid = fmtUid(serial); $('#uidInfo small').textContent = 'UID terbaca: ' + (uid || '-');
     const { data: s, error } = await db.from('santri').select('no_reg,nama').eq('nfc_uid', uid).maybeSingle();
     if (error) throw error;
     if (!s) return showRes('err', 'Kartu NFC tidak terdaftar! Jika kartu hilang/ganti, silakan perbarui nfc_uid di Master Data Santri.');
