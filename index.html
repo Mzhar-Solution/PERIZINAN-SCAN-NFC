@@ -74,25 +74,15 @@ small.hint{color:var(--mute)}
   <div class="card scan">
     <h2>Scan Kartu NFC</h2>
     <div class="tools" style="justify-content:center">
-      <div style="flex:0 1 260px"><label>Perangkat scan</label>
-        <select id="selMode">
-          <option value="web">HP Android (Web NFC)</option>
-          <option value="kb">Reader USB / PC (keyboard)</option>
-        </select></div>
-      <div id="fmtWrap" style="flex:0 1 260px;display:none"><label>Format UID dari reader</label>
+      <div style="flex:0 1 260px"><label>Format UID dari reader</label>
         <select id="selFmt">
-          <option value="hex">Hex (04A1B2C3 / 04:A1:B2:C3)</option>
+          <option value="hex">Hex (04A1B2C3)</option>
           <option value="hexrev">Hex, urutan byte dibalik</option>
           <option value="dec">Desimal (mis. 3282547460)</option>
           <option value="decrev">Desimal, urutan byte dibalik</option>
         </select></div>
     </div>
-    <div id="panelWeb">
-      <p style="color:var(--mute);margin-top:0">Tempelkan kartu santri ke bagian belakang HP setelah scan dimulai.</p>
-      <button class="btn" id="btnScan">Mulai Scan</button>
-      <div id="scanState" style="margin-top:14px;display:none"><span class="pulse"></span>Menunggu kartu…</div>
-    </div>
-    <div id="panelKb" style="display:none">
+    <div id="panelKb">
       <p style="color:var(--mute);margin-top:0">Colok reader USB, lalu tempelkan kartu ke reader. Kolom di bawah harus aktif (kursor berkedip).</p>
       <input id="kbInput" autocomplete="off" inputmode="none" placeholder="Menunggu kartu dari reader…" style="max-width:360px;text-align:center">
       <div style="margin-top:8px"><small class="hint">UID juga bisa diketik manual lalu tekan Enter.</small></div>
@@ -195,8 +185,7 @@ function debounce(fn, ms=300){ let t; return (...a)=>{ clearTimeout(t); t=setTim
 const normUid = u => {
   const s = clean(u); if (!s) return null;
   if (/[^0-9a-fA-F:\-\s]/.test(s)) return s.toUpperCase();
-  const hex = s.replace(/[^0-9a-fA-F]/g, '');
-  return hex.length && hex.length % 2 === 0 ? hex.toUpperCase().match(/../g).join(':') : s.toUpperCase();
+  return s.replace(/[^0-9a-fA-F]/g, '').toUpperCase();
 };
 
 async function fetchAll(build){ // lewati batas 1000 baris Supabase
@@ -287,11 +276,8 @@ $('#btnEditSave').onclick = async () => {
   stopScan(); $('#dlgEdit').close(); toast('Perubahan disimpan.'); loadSantri();
 };
 // Scan kartu baru langsung ke kolom NFC UID (untuk kartu hilang/ganti)
-$('#btnEditScan').onclick = async () => {
-  if (mode() === 'kb' || !('NDEFReader' in window)) { // reader USB: UID "diketik" ke kolom ini
-    $('#editUid').value = ''; $('#editUid').focus(); return toast('Tempelkan kartu ke reader USB.');
-  }
-  await startScan(sn => { $('#editUid').value = normUid(sn); toast('UID terbaca. Klik "Simpan perubahan".'); stopScan(); });
+$('#btnEditScan').onclick = () => { // UID "diketik" oleh reader USB ke kolom ini
+  $('#editUid').value = ''; $('#editUid').focus(); toast('Tempelkan kartu ke reader USB.');
 };
 // Reader USB mengirim Enter setelah UID: konversi format, jangan kirim form
 ['#addUid', '#editUid'].forEach(id => $(id).addEventListener('keydown', e => {
@@ -333,9 +319,8 @@ $('#btnImport').onclick = async () => {
 };
 
 /* ====== NFC ====== */
-let reader = null, abortCtl = null;
-const mode = () => $('#selMode').value;
-const revBytes = u => u && u.split(':').reverse().join(':');
+const mode = () => 'kb';
+const revBytes = u => u && u.match(/../g).reverse().join('');
 function fmtUid(raw){ // samakan format UID dari sumber apa pun ke format tersimpan
   raw = clean(raw); if (!raw) return null;
   const f = mode() === 'kb' ? $('#selFmt').value : 'hex';
@@ -347,15 +332,8 @@ function fmtUid(raw){ // samakan format UID dari sumber apa pun ke format tersim
   const u = normUid(raw); return f === 'hexrev' ? revBytes(u) : u;
 }
 const store = { get:k => { try { return localStorage.getItem(k); } catch(e){ return null; } }, set:(k,v) => { try { localStorage.setItem(k,v); } catch(e){} } };
-function applyMode(){
-  const kb = mode() === 'kb';
-  stopScan();
-  $('#panelWeb').style.display = kb ? 'none' : ''; $('#panelKb').style.display = kb ? '' : 'none';
-  $('#fmtWrap').style.display = kb ? '' : 'none';
-  store.set('scanMode', mode()); kbFocus();
-}
+function applyMode(){ kbFocus(); }
 function kbFocus(){ if (mode() === 'kb' && $('#scan').classList.contains('on') && !$('#dlgEdit').open) $('#kbInput').focus(); }
-$('#selMode').addEventListener('change', applyMode);
 $('#selFmt').addEventListener('change', () => { store.set('scanFmt', $('#selFmt').value); kbFocus(); });
 let kbTimer;
 const kbSubmit = () => { clearTimeout(kbTimer); const el = $('#kbInput'), v = el.value.trim(); el.value = ''; if (v) processScan(v); };
@@ -364,27 +342,10 @@ $('#kbInput').addEventListener('input', () => { clearTimeout(kbTimer); kbTimer =
 $('#kbInput').addEventListener('blur', () => setTimeout(() => { if (document.activeElement === document.body) kbFocus(); }, 200));
 $('#panelKb').addEventListener('click', kbFocus);
 $('#selFmt').value = store.get('scanFmt') || 'hex';
-$('#selMode').value = store.get('scanMode') || ('NDEFReader' in window ? 'web' : 'kb');
 applyMode();
-async function startScan(onSerial){
-  if (!('NDEFReader' in window)) { showRes('err', 'Web NFC tidak didukung. Gunakan Chrome di Android dengan HTTPS dan NFC aktif.'); toast('Web NFC tidak didukung.'); return false; }
-  try {
-    stopScan();
-    abortCtl = new AbortController(); reader = new NDEFReader();
-    await reader.scan({ signal: abortCtl.signal });
-    reader.onreading = ev => onSerial(ev.serialNumber);
-    reader.onreadingerror = () => showRes('err', 'Kartu tidak bisa dibaca. Coba tempelkan ulang.');
-    $('#scanState').style.display = 'block'; $('#btnScan').textContent = 'Hentikan Scan';
-    return true;
-  } catch(e){ showRes('err', 'Gagal memulai NFC: ' + e.message); return false; }
-}
-function stopScan(){
-  if (abortCtl) abortCtl.abort(); abortCtl = reader = null;
-  $('#scanState').style.display = 'none'; $('#btnScan').textContent = 'Mulai Scan';
-}
+function stopScan(){}
 function showRes(type, text){ const r = $('#result'); r.className = 'res ' + type; r.textContent = text; }
 
-$('#btnScan').onclick = () => abortCtl ? stopScan() : startScan(processScan);
 
 let busy = false;
 async function processScan(serial){
