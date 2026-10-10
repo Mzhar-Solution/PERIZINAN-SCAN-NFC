@@ -49,6 +49,13 @@
   .res-ok   { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
   .res-warn { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
   .res-err  { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+
+  /* Loader & skeleton */
+  #topLoader{position:fixed;top:0;left:0;height:3px;width:0;opacity:0;background:#10b981;z-index:100;pointer-events:none}
+  .skel{background:linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 37%,#f1f5f9 63%);background-size:400% 100%;animation:shimmer 1.2s ease infinite;border-radius:.5rem;height:1rem}
+  @keyframes shimmer{0%{background-position:100% 50%}100%{background-position:0 50%}}
+  main > section.fade{animation:fadeIn .15s ease}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 </style>
 </head>
 <body class="min-h-screen flex flex-col justify-between selection:bg-emerald-500 selection:text-white">
@@ -320,6 +327,7 @@
   </div>
 </dialog>
 
+<div id="topLoader"></div>
 <div id="toast" class="fixed bottom-4 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-sm px-4 py-2.5 rounded-xl shadow-xl hidden z-50 transition-all"></div>
 
 <script>
@@ -337,6 +345,22 @@ function toast(m){
   tt = setTimeout(() => { t.style.display = 'none'; }, 3000);
 }
 function debounce(fn, ms = 300){ let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
+const TTL = 30000; // data dianggap segar selama 30 detik
+const stamp = { dash: 0, santri: 0, log: '' };
+let loadCount = 0;
+function loading(on){ // progress bar tipis di atas layar
+  const b = $('#topLoader');
+  loadCount = Math.max(0, loadCount + (on ? 1 : -1));
+  if (on && loadCount === 1) {
+    b.style.transition = 'none'; b.style.width = '0'; b.style.opacity = '1'; void b.offsetWidth;
+    b.style.transition = 'width 8s cubic-bezier(.1,.7,.2,1)'; b.style.width = '80%';
+  }
+  if (!on && loadCount === 0) {
+    b.style.transition = 'width .2s, opacity .4s .2s'; b.style.width = '100%'; b.style.opacity = '0';
+  }
+}
+const skelRows = (cols, n = 5) => Array.from({length:n}, () =>
+  '<tr>' + Array.from({length:cols}, () => '<td><div class="skel"></div></td>').join('') + '</tr>').join('');
 const normUid = u => {
   const s = clean(u); if (!s) return null;
   if (/[^0-9a-fA-F:\-\s]/.test(s)) return s.toUpperCase();
@@ -360,7 +384,6 @@ $('#btnEnterApp').addEventListener('click', () => {
 // (cek di Supabase Dashboard > Project Settings > API)
 const SUPABASE_URL = 'https://alsjmuelqpocvipptoht.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFsc2ptdWVscXBvY3ZpcHB0b2h0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE1NTk1ODksImV4cCI6MjEwNzEzNTU4OX0.6ZcAdLr-6ZWPdOVtRPj2w0hazZPkvzz7gd-MY8Bslfs';
-
 let db = null;
 try {
   db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -390,6 +413,8 @@ function switchTab(t){
     const active = s.id === t;
     s.classList.toggle('on', active);
     s.classList.toggle('hidden', !active);
+    s.classList.remove('fade');
+    if (active) { void s.offsetWidth; s.classList.add('fade'); }
   });
   if (t === 'scan') setTimeout(kbFocus, 50);
   if (t === 'dash') loadDash();
@@ -403,25 +428,38 @@ function switchTab(t){
 $('#btnQuickScan').addEventListener('click', () => switchTab('scan'));
 
 /* ====== DASHBOARD ====== */
-async function loadDash(){
+async function loadDash(force){
   if (!needDb()) return;
+  if (!force && Date.now() - stamp.dash < TTL) return;
+  loading(true);
   try {
-    const { count, error } = await db.from('santri').select('*', { count:'exact', head:true });
-    if (error) throw error;
-    $('#stTotal').textContent = count ?? 0;
-    const rows = await fetchAll(() => db.from('riwayat_izin').select('no_reg').gte('created_at', monthStart()));
+    const [c, rows] = await Promise.all([
+      db.from('santri').select('id', { count:'exact', head:true }),
+      fetchAll(() => db.from('riwayat_izin').select('no_reg').gte('created_at', monthStart()))
+    ]);
+    if (c.error) throw c.error;
+    $('#stTotal').textContent = c.count ?? 0;
     $('#stIzin').textContent = new Set(rows.map(r => r.no_reg)).size;
+    stamp.dash = Date.now();
   } catch(e){ toast('Gagal memuat dashboard: ' + e.message); }
+  finally { loading(false); }
 }
 
 /* ====== MASTER SANTRI ====== */
-let santriCache = [];
-async function loadSantri(){
+let santriCache = [], santriLoaded = false;
+function invalidate(){ stamp.dash = 0; stamp.santri = 0; stamp.log = ''; }
+function afterChange(){ invalidate(); loadSantri(true); }
+async function loadSantri(force){
   if (!needDb()) return;
+  if (!santriLoaded) $('#tbSantri').innerHTML = skelRows(7);
+  if (!force && santriLoaded && Date.now() - stamp.santri < TTL) return;
+  loading(true);
   try {
-    santriCache = await fetchAll(() => db.from('santri').select('*').order('nama'));
+    santriCache = await fetchAll(() => db.from('santri').select('id,no_reg,nama,alamat,asrama,kamar,nfc_uid').order('nama'));
+    santriLoaded = true; stamp.santri = Date.now();
     renderSantri();
   } catch(e){ toast('Gagal memuat santri: ' + e.message); }
+  finally { loading(false); }
 }
 function renderSantri(){
   const q = $('#qSantri').value.trim().toLowerCase();
@@ -448,7 +486,7 @@ $('#formAdd').addEventListener('submit', async e => {
   const row = { no_reg: f.no_reg.trim(), nama: f.nama.trim(), alamat: clean(f.alamat), asrama: clean(f.asrama), kamar: clean(f.kamar), nfc_uid: fmtUid(f.nfc_uid) };
   const { error } = await db.from('santri').insert(row);
   if (error) return toast(error.code === '23505' ? 'No. Reg atau NFC UID sudah dipakai.' : 'Gagal: ' + error.message);
-  e.target.reset(); toast('Santri ditambahkan.'); loadSantri();
+  e.target.reset(); toast('Santri ditambahkan.'); afterChange();
 });
 
 $('#tbSantri').addEventListener('click', async e => {
@@ -466,7 +504,7 @@ $('#tbSantri').addEventListener('click', async e => {
     if (!confirm(`Hapus ${s.nama} (${s.no_reg})? Riwayat izinnya juga ikut terhapus.`)) return;
     const { error } = await db.from('santri').delete().eq('id', s.id);
     if (error) return toast('Gagal hapus: ' + error.message);
-    toast('Santri dihapus.'); loadSantri();
+    toast('Santri dihapus.'); afterChange();
   }
 });
 
@@ -480,7 +518,7 @@ $('#btnEditSave').addEventListener('click', async () => {
     asrama: clean(v.asrama), kamar: clean(v.kamar), nfc_uid: fmtUid(v.nfc_uid)
   }).eq('id', v.id);
   if (error) return toast(error.code === '23505' ? 'No. Reg atau NFC UID sudah dipakai santri lain.' : 'Gagal: ' + error.message);
-  $('#dlgEdit').close(); toast('Perubahan disimpan.'); loadSantri();
+  $('#dlgEdit').close(); toast('Perubahan disimpan.'); afterChange();
 });
 // Scan kartu baru langsung ke kolom NFC UID (untuk kartu hilang/ganti)
 $('#btnEditScan').addEventListener('click', () => {
@@ -521,7 +559,7 @@ $('#btnImport').addEventListener('click', async () => {
     }
     msg.className = 'mt-3 text-xs font-medium text-emerald-600';
     msg.textContent = `Selesai: ${rows.length} santri diimpor${skip ? `, ${skip} baris dilewati (NoReg/Nama kosong)` : ''}.`;
-    $('#fileXls').value = ''; loadSantri();
+    $('#fileXls').value = ''; afterChange();
   } catch(e){
     msg.className = 'mt-3 text-xs font-medium text-red-600';
     msg.textContent = `Gagal import: ${e.message}${e.code === '23505' ? ' (ada NFC_UID ganda)' : ''}`;
@@ -587,7 +625,7 @@ async function processScan(serial){
     if (count >= 1) return showRes('warn', `Izin Ditolak! Santri ${s.nama} (NoReg: ${s.no_reg}) sudah menggunakan kuota 1x izin bulan ini.`);
     const { error: e3 } = await db.from('riwayat_izin').insert({ no_reg: s.no_reg, nama: s.nama, keterangan: 'Izin via scan NFC' });
     if (e3) throw e3;
-    showRes('ok', `Izin Disetujui untuk ${s.nama}!`);
+    invalidate(); showRes('ok', `Izin Disetujui untuk ${s.nama}!`);
   } catch(e){
     showRes('err', 'Terjadi kesalahan: ' + e.message);
   } finally {
@@ -602,10 +640,14 @@ function rangeStart(){
   if (r === 'week') return new Date(n.getFullYear(), n.getMonth(), n.getDate() - 6).toISOString();
   return monthStart();
 }
-async function loadLog(){
+async function loadLog(force){
   if (!needDb()) return;
+  const q = $('#qLog').value.trim().replace(/[,()%*]/g, ' ');
+  const key = $('#fRange').value + '|' + q;
+  if (!$('#tbLog').children.length) $('#tbLog').innerHTML = skelRows(4);
+  if (!force && stamp.log.startsWith(key + '@') && Date.now() - Number(stamp.log.split('@')[1]) < TTL) return;
+  loading(true);
   try {
-    const q = $('#qLog').value.trim().replace(/[,()%*]/g, ' ');
     const rows = await fetchAll(() => {
       let b = db.from('riwayat_izin').select('*').gte('created_at', rangeStart()).order('created_at', { ascending:false });
       if (q) b = b.or(`nama.ilike.%${q}%,no_reg.ilike.%${q}%`);
@@ -614,12 +656,15 @@ async function loadLog(){
     $('#tbLog').innerHTML = rows.length ? rows.map(r =>
       `<tr><td>${fmt(r.created_at)}</td><td>${esc(r.no_reg)}</td><td class="font-semibold text-slate-900">${esc(r.nama)}</td><td>${esc(r.keterangan)}</td></tr>`).join('')
       : '<tr><td colspan="4" class="empty">Tidak ada izin pada rentang ini.</td></tr>';
+    stamp.log = key + '@' + Date.now();
   } catch(e){ toast('Gagal memuat log: ' + e.message); }
+  finally { loading(false); }
 }
 $('#fRange').addEventListener('change', loadLog);
 $('#qLog').addEventListener('input', debounce(loadLog));
 
 loadDash();
+setTimeout(() => { loadSantri(); loadLog(); }, 300); // preload agar tab langsung siap
 </script>
 </body>
 </html>
