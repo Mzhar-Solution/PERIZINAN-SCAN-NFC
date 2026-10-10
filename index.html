@@ -4,20 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Perizinan Santri NFC - Bento Edition</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script>
-  tailwind.config = {
-    theme: {
-      extend: {
-        fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] }
-      }
-    }
-  }
+  tailwind.config = { theme: { extend: { fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] } } } }
 </script>
 <style>
   body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; color: #0f172a; }
@@ -26,16 +20,13 @@
   .pulse-dot { width: 10px; height: 10px; border-radius: 50%; background: #10b981; display: inline-block; animation: pulse-anim 1.5s infinite; }
   @keyframes pulse-anim { 0% { transform: scale(.95); box-shadow: 0 0 0 0 rgba(16,185,129,.7); } 70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(16,185,129,0); } 100% { transform: scale(.95); box-shadow: 0 0 0 0 rgba(16,185,129,0); } }
   dialog::backdrop { background: rgba(15,23,42,.4); backdrop-filter: blur(4px); }
-  #welcomeScreen { transition: opacity .4s ease, transform .4s ease; }
 
-  /* Tab navigasi */
   .tab-d { padding: .5rem 1rem; border-radius: .75rem; font-size: .875rem; font-weight: 600; color: #475569; transition: all .2s; }
   .tab-d:hover { color: #0f172a; }
   .tab-d.on { background: #fff; color: #0f172a; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
   .tab-m { padding: .375rem .75rem; border-radius: .5rem; font-size: .75rem; font-weight: 600; white-space: nowrap; background: #fff; color: #475569; border: 1px solid #e2e8f0; }
   .tab-m.on { background: #0f172a; color: #fff; border-color: #0f172a; }
 
-  /* Tabel */
   #tbSantri td, #tbLog td { padding: .75rem 1rem; vertical-align: middle; }
   .empty { text-align: center; color: #94a3b8; padding: 2rem 1rem !important; }
   .hint { color: #94a3b8; }
@@ -45,12 +36,10 @@
   .btn-del { background: #fef2f2; color: #dc2626; }
   .btn-del:hover { background: #fee2e2; }
 
-  /* Hasil scan */
   .res-ok   { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
   .res-warn { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
   .res-err  { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
 
-  /* Loader & skeleton */
   #topLoader{position:fixed;top:0;left:0;height:3px;width:0;opacity:0;background:#10b981;z-index:100;pointer-events:none}
   .skel{background:linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 37%,#f1f5f9 63%);background-size:400% 100%;animation:shimmer 1.2s ease infinite;border-radius:.5rem;height:1rem}
   @keyframes shimmer{0%{background-position:100% 50%}100%{background-position:0 50%}}
@@ -60,30 +49,10 @@
 </head>
 <body class="min-h-screen flex flex-col justify-between selection:bg-emerald-500 selection:text-white">
 
-<!-- WELCOME SCREEN OVERLAY -->
-<div id="welcomeScreen" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4">
-  <div class="bento-card bg-white p-8 sm:p-10 max-w-xl w-full text-center shadow-2xl relative overflow-hidden">
-    <div class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-emerald-500 to-slate-900"></div>
-    <div class="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl mx-auto flex items-center justify-center mb-6 shadow-sm border border-emerald-100">
-      <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.115 6.848l.015-.045M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
-    </div>
-    <h1 class="text-2xl font-bold text-slate-900 mb-2">Selamat Datang, User</h1>
-    <p class="text-sm text-slate-600 leading-relaxed mb-8 text-justify sm:text-center">
-      Platform Perizinan Santri ini hadir untuk membantu pengelolaan perizinan santri secara terintegrasi. Sistem ini menerapkan kebijakan pembatasan izin maksimal 1 (satu) kali dalam sebulan dengan memanfaatkan teknologi NFC untuk memastikan proses pencatatan dan pengawasan berjalan secara akurat, efektif, dan efisien.
-    </p>
-    <button id="btnEnterApp" type="button" class="w-full py-3.5 px-6 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 group">
-      <span>Klik untuk Masuk</span>
-      <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-    </button>
-    <div class="mt-6 text-xs text-slate-400 font-medium">
-      Dikembangkan oleh Mzhar_Solution &copy; 2026
-    </div>
-  </div>
-</div>
-
-<div id="mainAppWrapper" class="opacity-0 transition-opacity duration-500 hidden">
+<!-- Disembunyikan sampai sesi login terverifikasi -->
+<div id="mainAppWrapper" class="hidden">
   <header class="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-3">
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center font-bold text-lg shadow-sm">NFC</div>
         <div>
@@ -91,15 +60,20 @@
           <p class="text-xs text-slate-500 flex items-center gap-1.5 mt-0.5"><span class="pulse-dot"></span>Sistem Aktif &amp; Terhubung</p>
         </div>
       </div>
-      <!-- Navigasi desktop -->
       <nav id="nav" class="hidden md:flex items-center gap-1 bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
         <button type="button" data-t="dash"   class="tab-d on">Dashboard</button>
         <button type="button" data-t="scan"   class="tab-d">Scan Izin</button>
         <button type="button" data-t="master" class="tab-d">Data Santri</button>
         <button type="button" data-t="log"    class="tab-d">Log Perizinan</button>
       </nav>
+      <div class="flex items-center gap-3">
+        <div class="hidden sm:block text-right leading-tight">
+          <div id="userName" class="text-sm font-semibold text-slate-900"></div>
+          <div id="userRole" class="text-xs text-slate-500"></div>
+        </div>
+        <button type="button" id="btnLogout" class="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 text-sm font-semibold rounded-xl transition-all">Keluar</button>
+      </div>
     </div>
-    <!-- Navigasi mobile -->
     <div id="navMobile" class="md:hidden flex overflow-x-auto gap-2 px-4 py-2 bg-slate-50 border-t border-slate-200">
       <button type="button" data-t="dash"   class="tab-m on">Dashboard</button>
       <button type="button" data-t="scan"   class="tab-m">Scan Izin</button>
@@ -331,6 +305,15 @@
 <div id="toast" class="fixed bottom-4 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-sm px-4 py-2.5 rounded-xl shadow-xl hidden z-50 transition-all"></div>
 
 <script>
+/* ====== KONFIGURASI ====== */
+const SUPABASE_URL = 'https://alsjmuelqpocvipptoht.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFsc2ptdWVscXBvY3ZpcHB0b2h0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE1NTk1ODksImV4cCI6MjEwNzEzNTU4OX0.6ZcAdLr-6ZWPdOVtRPj2w0hazZPkvzz7gd-MY8Bslfs';
+const LOGIN_PAGE   = 'login.html';
+const IDLE_MINUTES = 60;      // logout otomatis bila tidak ada aktivitas (0 = nonaktif)
+const REQ_TIMEOUT  = 20000;   // batas waktu tiap request ke database (ms)
+const PAGE_SANTRI  = 100;     // jumlah baris tabel santri yang digambar per tahap
+const MAX_LOG_ROWS = 300;     // batas baris log yang digambar
+
 /* ====== UTIL ====== */
 const $ = s => document.querySelector(s);
 const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -342,13 +325,13 @@ function toast(m){
   const t = $('#toast'); t.textContent = m;
   t.classList.remove('hidden'); t.style.display = 'block';
   clearTimeout(tt);
-  tt = setTimeout(() => { t.style.display = 'none'; }, 3000);
+  tt = setTimeout(() => { t.style.display = 'none'; }, 3500);
 }
 function debounce(fn, ms = 300){ let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
-const TTL = 30000; // data dianggap segar selama 30 detik
+const TTL = 30000;
 const stamp = { dash: 0, santri: 0, log: '' };
 let loadCount = 0;
-function loading(on){ // progress bar tipis di atas layar
+function loading(on){
   const b = $('#topLoader');
   loadCount = Math.max(0, loadCount + (on ? 1 : -1));
   if (on && loadCount === 1) {
@@ -361,50 +344,91 @@ function loading(on){ // progress bar tipis di atas layar
 }
 const skelRows = (cols, n = 5) => Array.from({length:n}, () =>
   '<tr>' + Array.from({length:cols}, () => '<td><div class="skel"></div></td>').join('') + '</tr>').join('');
+const errRow = (cols, what) =>
+  `<tr><td colspan="${cols}" class="empty">Gagal memuat data. <button type="button" class="btn-sm btn-edit" data-retry="${what}">Coba lagi</button></td></tr>`;
 const normUid = u => {
   const s = clean(u); if (!s) return null;
   if (/[^0-9a-fA-F:\-\s]/.test(s)) return s.toUpperCase();
   return s.replace(/[^0-9a-fA-F]/g, '').toUpperCase();
 };
+// Cegah request ganda untuk data yang sama; force = tunggu yang berjalan lalu muat ulang
+const inflight = {};
+function once(key, fn, force){
+  const cur = inflight[key];
+  if (cur && !force) return cur;
+  const p = (cur ? cur.catch(() => {}) : Promise.resolve()).then(fn).finally(() => { if (inflight[key] === p) delete inflight[key]; });
+  inflight[key] = p; return p;
+}
 
-/* ====== WELCOME SCREEN (dipasang pertama agar selalu berfungsi) ====== */
-$('#btnEnterApp').addEventListener('click', () => {
-  const ws = $('#welcomeScreen'), app = $('#mainAppWrapper');
-  ws.style.opacity = '0';
-  ws.style.transform = 'scale(1.05)';
-  setTimeout(() => {
-    ws.style.display = 'none';
-    app.classList.remove('hidden');
-    setTimeout(() => { app.style.opacity = '1'; kbFocus(); }, 50);
-  }, 400);
-});
-
-/* ====== KONFIGURASI SUPABASE ====== */
-// PENTING: URL harus berbentuk https://<project-ref>.supabase.co
-// (cek di Supabase Dashboard > Project Settings > API)
-const SUPABASE_URL = 'https://alsjmuelqpocvipptoht.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFsc2ptdWVscXBvY3ZpcHB0b2h0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE1NTk1ODksImV4cCI6MjEwNzEzNTU4OX0.6ZcAdLr-6ZWPdOVtRPj2w0hazZPkvzz7gd-MY8Bslfs';
+/* ====== SUPABASE & SESI ====== */
 let db = null;
 try {
-  db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-} catch (e) {
-  console.error('Supabase gagal diinisialisasi:', e);
-}
+  db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false }
+  });
+} catch (e) { console.error('Supabase gagal diinisialisasi:', e); }
 function needDb(){
   if (!db) { toast('Koneksi database belum siap. Periksa URL & key Supabase.'); return false; }
   return true;
 }
 
-async function fetchAll(build){ // lewati batas 1000 baris Supabase
+let leaving = false;
+function goLogin(reason){
+  if (leaving) return; leaving = true;
+  try { if (reason && !sessionStorage.getItem('loginMsg')) sessionStorage.setItem('loginMsg', reason); } catch(e){}
+  location.replace(LOGIN_PAGE);
+}
+async function logout(reason){
+  if (leaving) return;
+  try { sessionStorage.setItem('loginMsg', reason || 'Anda telah keluar.'); } catch(e){}
+  try { await db.auth.signOut(); } catch(e){ console.warn('signOut:', e); }
+  goLogin();
+}
+// PENTING: callback ini harus sinkron (jangan await/query Supabase di dalamnya, bisa membuat aplikasi macet)
+if (db) db.auth.onAuthStateChange(event => {
+  if (event === 'SIGNED_OUT') goLogin('Sesi Anda telah berakhir. Silakan masuk kembali.');
+});
+const isAuthErr = e => !!e && (e.status === 401 || e.code === 'PGRST301' || e.code === 'PGRST303' ||
+  /jwt|token.*(expired|invalid)|not authenticated|refresh_token/i.test(e.message || ''));
+function fail(e, prefix){
+  console.error(prefix, e);
+  if (isAuthErr(e)) return logout('Sesi habis. Silakan masuk kembali.');
+  const m = /abort/i.test(e?.message || '') ? 'koneksi terlalu lama (timeout)' : (e?.message || e);
+  toast(prefix + m);
+}
+// Jalankan query dengan batas waktu supaya UI tidak menggantung selamanya
+async function run(builder){
+  const c = new AbortController(), t = setTimeout(() => c.abort(), REQ_TIMEOUT);
+  try { return await builder.abortSignal(c.signal); } finally { clearTimeout(t); }
+}
+async function fetchAll(build){ // lewati batas 1000 baris Supabase; build() HARUS memakai order unik (…, id)
   let all = [], from = 0;
   while (true) {
-    const { data, error } = await build().range(from, from + 999);
+    const { data, error } = await run(build().range(from, from + 999));
     if (error) throw error;
     all = all.concat(data);
     if (data.length < 1000) return all;
     from += 1000;
   }
 }
+function setUser(u){
+  const m = (u && u.user_metadata) || {};
+  $('#userName').textContent = m.nama_lengkap || (u && u.email) || '';
+  $('#userRole').textContent = m.role || '';
+}
+
+// Logout otomatis bila tidak ada aktivitas
+let idleT, lastAct = 0;
+function resetIdle(){
+  if (!IDLE_MINUTES) return;
+  const n = Date.now(); if (n - lastAct < 5000) return; lastAct = n;
+  clearTimeout(idleT);
+  idleT = setTimeout(() => logout('Anda keluar otomatis karena tidak ada aktivitas.'), IDLE_MINUTES * 60000);
+}
+['mousemove','keydown','click','touchstart','scroll'].forEach(ev => addEventListener(ev, resetIdle, { passive:true }));
+$('#btnLogout').addEventListener('click', () => logout('Anda telah keluar.'));
+// Halaman dari cache tombol "back" setelah logout: paksa cek ulang
+addEventListener('pageshow', e => { if (e.persisted) location.reload(); });
 
 /* ====== NAVIGASI ====== */
 function switchTab(t){
@@ -428,43 +452,53 @@ function switchTab(t){
 $('#btnQuickScan').addEventListener('click', () => switchTab('scan'));
 
 /* ====== DASHBOARD ====== */
-async function loadDash(force){
-  if (!needDb()) return;
-  if (!force && Date.now() - stamp.dash < TTL) return;
-  loading(true);
-  try {
-    const [c, rows] = await Promise.all([
-      db.from('santri').select('id', { count:'exact', head:true }),
-      fetchAll(() => db.from('riwayat_izin').select('no_reg').gte('created_at', monthStart()))
-    ]);
-    if (c.error) throw c.error;
-    $('#stTotal').textContent = c.count ?? 0;
-    $('#stIzin').textContent = new Set(rows.map(r => r.no_reg)).size;
-    stamp.dash = Date.now();
-  } catch(e){ toast('Gagal memuat dashboard: ' + e.message); }
-  finally { loading(false); }
+function loadDash(force){
+  if (!needDb()) return Promise.resolve();
+  if (!force && Date.now() - stamp.dash < TTL) return Promise.resolve();
+  return once('dash', async () => {
+    loading(true);
+    try {
+      const [c, rows] = await Promise.all([
+        run(db.from('santri').select('id', { count:'exact', head:true })),
+        fetchAll(() => db.from('riwayat_izin').select('id,no_reg').gte('created_at', monthStart()).order('id'))
+      ]);
+      if (c.error) throw c.error;
+      $('#stTotal').textContent = c.count ?? 0;
+      $('#stIzin').textContent = new Set(rows.map(r => r.no_reg)).size;
+      stamp.dash = Date.now();
+    } catch(e){ fail(e, 'Gagal memuat dashboard: '); }
+    finally { loading(false); }
+  }, force);
 }
 
 /* ====== MASTER SANTRI ====== */
-let santriCache = [], santriLoaded = false;
+let santriCache = [], santriLoaded = false, santriLimit = PAGE_SANTRI;
 function invalidate(){ stamp.dash = 0; stamp.santri = 0; stamp.log = ''; }
 function afterChange(){ invalidate(); loadSantri(true); }
-async function loadSantri(force){
-  if (!needDb()) return;
-  if (!santriLoaded) $('#tbSantri').innerHTML = skelRows(7);
-  if (!force && santriLoaded && Date.now() - stamp.santri < TTL) return;
-  loading(true);
-  try {
-    santriCache = await fetchAll(() => db.from('santri').select('id,no_reg,nama,alamat,asrama,kamar,nfc_uid').order('nama'));
-    santriLoaded = true; stamp.santri = Date.now();
-    renderSantri();
-  } catch(e){ toast('Gagal memuat santri: ' + e.message); }
-  finally { loading(false); }
+function loadSantri(force){
+  if (!needDb()) return Promise.resolve();
+  if (!force && santriLoaded && Date.now() - stamp.santri < TTL) return Promise.resolve();
+  return once('santri', async () => {
+    if (!santriLoaded) $('#tbSantri').innerHTML = skelRows(7);
+    loading(true);
+    try {
+      santriCache = await fetchAll(() => db.from('santri').select('id,no_reg,nama,alamat,asrama,kamar,nfc_uid').order('nama').order('id'));
+      santriCache.forEach(s => { s._q = [s.no_reg,s.nama,s.asrama,s.kamar,s.alamat].map(v => String(v || '')).join(' ').toLowerCase(); });
+      santriLoaded = true; stamp.santri = Date.now();
+      renderSantri();
+    } catch(e){
+      if (!santriLoaded) $('#tbSantri').innerHTML = errRow(7, 'santri'); // jangan biarkan skeleton menggantung
+      fail(e, 'Gagal memuat santri: ');
+    }
+    finally { loading(false); }
+  }, force);
 }
-function renderSantri(){
+function renderSantri(reset){
+  if (reset === true) santriLimit = PAGE_SANTRI;
   const q = $('#qSantri').value.trim().toLowerCase();
-  const rows = santriCache.filter(s => !q || [s.no_reg,s.nama,s.asrama,s.kamar,s.alamat].some(v => String(v||'').toLowerCase().includes(q)));
-  $('#tbSantri').innerHTML = rows.length ? rows.map(s => `
+  const all = q ? santriCache.filter(s => s._q.includes(q)) : santriCache;
+  const rows = all.slice(0, santriLimit);
+  let html = rows.map(s => `
     <tr>
       <td>${esc(s.no_reg)}</td><td class="font-semibold text-slate-900">${esc(s.nama)}</td>
       <td>${esc(s.asrama)}</td><td>${esc(s.kamar)}</td>
@@ -474,23 +508,29 @@ function renderSantri(){
         <button type="button" class="btn-sm btn-edit" data-edit="${esc(s.id)}">Edit</button>
         <button type="button" class="btn-sm btn-del" data-del="${esc(s.id)}">Hapus</button>
       </td>
-    </tr>`).join('')
-    : '<tr><td colspan="7" class="empty">Belum ada data santri.</td></tr>';
+    </tr>`).join('');
+  if (all.length > rows.length)
+    html += `<tr><td colspan="7" class="empty"><button type="button" class="btn-sm btn-edit" data-more="1">Tampilkan lebih banyak (${rows.length} dari ${all.length})</button></td></tr>`;
+  $('#tbSantri').innerHTML = html || '<tr><td colspan="7" class="empty">Belum ada data santri.</td></tr>';
 }
-$('#qSantri').addEventListener('input', debounce(renderSantri, 150));
+$('#qSantri').addEventListener('input', debounce(() => renderSantri(true), 200));
 
 $('#formAdd').addEventListener('submit', async e => {
   e.preventDefault();
   if (!needDb()) return;
-  const f = Object.fromEntries(new FormData(e.target));
+  const form = e.target, f = Object.fromEntries(new FormData(form));
   const row = { no_reg: f.no_reg.trim(), nama: f.nama.trim(), alamat: clean(f.alamat), asrama: clean(f.asrama), kamar: clean(f.kamar), nfc_uid: fmtUid(f.nfc_uid) };
-  const { error } = await db.from('santri').insert(row);
-  if (error) return toast(error.code === '23505' ? 'No. Reg atau NFC UID sudah dipakai.' : 'Gagal: ' + error.message);
-  e.target.reset(); toast('Santri ditambahkan.'); afterChange();
+  try {
+    const { error } = await run(db.from('santri').insert(row));
+    if (error) return error.code === '23505' ? toast('No. Reg atau NFC UID sudah dipakai.') : fail(error, 'Gagal: ');
+    form.reset(); toast('Santri ditambahkan.'); afterChange();
+  } catch(err){ fail(err, 'Gagal: '); }
 });
 
 $('#tbSantri').addEventListener('click', async e => {
   const ed = e.target.closest('[data-edit]'), del = e.target.closest('[data-del]');
+  if (e.target.closest('[data-more]')) { santriLimit += PAGE_SANTRI; return renderSantri(); }
+  if (e.target.closest('[data-retry]')) return loadSantri(true);
   if (ed) {
     const s = santriCache.find(x => String(x.id) === ed.dataset.edit);
     if (!s) return;
@@ -502,9 +542,11 @@ $('#tbSantri').addEventListener('click', async e => {
     const s = santriCache.find(x => String(x.id) === del.dataset.del);
     if (!s) return;
     if (!confirm(`Hapus ${s.nama} (${s.no_reg})? Riwayat izinnya juga ikut terhapus.`)) return;
-    const { error } = await db.from('santri').delete().eq('id', s.id);
-    if (error) return toast('Gagal hapus: ' + error.message);
-    toast('Santri dihapus.'); afterChange();
+    try {
+      const { error } = await run(db.from('santri').delete().eq('id', s.id));
+      if (error) return fail(error, 'Gagal hapus: ');
+      toast('Santri dihapus.'); afterChange();
+    } catch(err){ fail(err, 'Gagal hapus: '); }
   }
 });
 
@@ -513,18 +555,18 @@ $('#btnEditSave').addEventListener('click', async () => {
   if (!needDb()) return;
   const f = $('#formEdit'); if (!f.reportValidity()) return;
   const v = Object.fromEntries(new FormData(f));
-  const { error } = await db.from('santri').update({
-    no_reg: v.no_reg.trim(), nama: v.nama.trim(), alamat: clean(v.alamat),
-    asrama: clean(v.asrama), kamar: clean(v.kamar), nfc_uid: fmtUid(v.nfc_uid)
-  }).eq('id', v.id);
-  if (error) return toast(error.code === '23505' ? 'No. Reg atau NFC UID sudah dipakai santri lain.' : 'Gagal: ' + error.message);
-  $('#dlgEdit').close(); toast('Perubahan disimpan.'); afterChange();
+  try {
+    const { error } = await run(db.from('santri').update({
+      no_reg: v.no_reg.trim(), nama: v.nama.trim(), alamat: clean(v.alamat),
+      asrama: clean(v.asrama), kamar: clean(v.kamar), nfc_uid: fmtUid(v.nfc_uid)
+    }).eq('id', v.id));
+    if (error) return error.code === '23505' ? toast('No. Reg atau NFC UID sudah dipakai santri lain.') : fail(error, 'Gagal: ');
+    $('#dlgEdit').close(); toast('Perubahan disimpan.'); afterChange();
+  } catch(err){ fail(err, 'Gagal: '); }
 });
-// Scan kartu baru langsung ke kolom NFC UID (untuk kartu hilang/ganti)
 $('#btnEditScan').addEventListener('click', () => {
   $('#editUid').value = ''; $('#editUid').focus(); toast('Tempelkan kartu ke reader USB.');
 });
-// Reader USB mengirim Enter setelah UID: konversi format, jangan kirim form
 ['#addUid', '#editUid'].forEach(id => $(id).addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
   e.preventDefault(); e.target.value = fmtUid(e.target.value) || '';
@@ -554,13 +596,14 @@ $('#btnImport').addEventListener('click', async () => {
     const rows = [...map.values()];
     for (let i = 0; i < rows.length; i += 200) {
       msg.textContent = `Menyimpan ${Math.min(i+200, rows.length)} / ${rows.length}…`;
-      const { error } = await db.from('santri').upsert(rows.slice(i, i+200), { onConflict:'no_reg' });
+      const { error } = await run(db.from('santri').upsert(rows.slice(i, i+200), { onConflict:'no_reg' }));
       if (error) throw error;
     }
     msg.className = 'mt-3 text-xs font-medium text-emerald-600';
     msg.textContent = `Selesai: ${rows.length} santri diimpor${skip ? `, ${skip} baris dilewati (NoReg/Nama kosong)` : ''}.`;
     $('#fileXls').value = ''; afterChange();
   } catch(e){
+    if (isAuthErr(e)) return logout('Sesi habis. Silakan masuk kembali.');
     msg.className = 'mt-3 text-xs font-medium text-red-600';
     msg.textContent = `Gagal import: ${e.message}${e.code === '23505' ? ' (ada NFC_UID ganda)' : ''}`;
   } finally { btn.disabled = false; }
@@ -568,7 +611,7 @@ $('#btnImport').addEventListener('click', async () => {
 
 /* ====== NFC ====== */
 const revBytes = u => u && u.match(/../g).reverse().join('');
-function fmtUid(raw){ // samakan format UID dari sumber apa pun ke format tersimpan
+function fmtUid(raw){
   raw = clean(raw); if (!raw) return null;
   const f = $('#selFmt').value;
   if (f === 'dec' || f === 'decrev') {
@@ -596,7 +639,7 @@ const kbSubmit = () => {
   if (v) processScan(v);
 };
 $('#kbInput').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); kbSubmit(); } });
-$('#kbInput').addEventListener('input', () => { // reader tanpa Enter
+$('#kbInput').addEventListener('input', () => {
   clearTimeout(kbTimer);
   kbTimer = setTimeout(() => { if ($('#kbInput').value.trim().length >= 6) kbSubmit(); }, 500);
 });
@@ -616,20 +659,22 @@ async function processScan(serial){
   try {
     const uid = fmtUid(serial);
     $('#uidInfo small').textContent = 'UID terbaca: ' + (uid || '-');
-    const { data: s, error } = await db.from('santri').select('no_reg,nama').eq('nfc_uid', uid).maybeSingle();
+    if (!uid) return showRes('err', 'UID tidak valid.');
+    const { data: s, error } = await run(db.from('santri').select('no_reg,nama').eq('nfc_uid', uid).maybeSingle());
     if (error) throw error;
     if (!s) return showRes('err', 'Kartu NFC tidak terdaftar! Jika kartu hilang/ganti, silakan perbarui nfc_uid di Data Santri.');
-    const { count, error: e2 } = await db.from('riwayat_izin').select('id', { count:'exact', head:true })
-      .eq('no_reg', s.no_reg).gte('created_at', monthStart());
+    const { count, error: e2 } = await run(db.from('riwayat_izin').select('id', { count:'exact', head:true })
+      .eq('no_reg', s.no_reg).gte('created_at', monthStart()));
     if (e2) throw e2;
     if (count >= 1) return showRes('warn', `Izin Ditolak! Santri ${s.nama} (NoReg: ${s.no_reg}) sudah menggunakan kuota 1x izin bulan ini.`);
-    const { error: e3 } = await db.from('riwayat_izin').insert({ no_reg: s.no_reg, nama: s.nama, keterangan: 'Izin via scan NFC' });
+    const { error: e3 } = await run(db.from('riwayat_izin').insert({ no_reg: s.no_reg, nama: s.nama, keterangan: 'Izin via scan NFC' }));
     if (e3) throw e3;
     invalidate(); showRes('ok', `Izin Disetujui untuk ${s.nama}!`);
   } catch(e){
-    showRes('err', 'Terjadi kesalahan: ' + e.message);
+    if (isAuthErr(e)) return logout('Sesi habis. Silakan masuk kembali.');
+    showRes('err', 'Terjadi kesalahan: ' + (/abort/i.test(e?.message || '') ? 'koneksi terlalu lama (timeout)' : e.message));
   } finally {
-    setTimeout(() => { busy = false; kbFocus(); }, 1500); // cegah scan ganda beruntun
+    setTimeout(() => { busy = false; kbFocus(); }, 1500);
   }
 }
 
@@ -640,31 +685,59 @@ function rangeStart(){
   if (r === 'week') return new Date(n.getFullYear(), n.getMonth(), n.getDate() - 6).toISOString();
   return monthStart();
 }
-async function loadLog(force){
-  if (!needDb()) return;
+let logSeq = 0;
+function loadLog(force){
+  if (!needDb()) return Promise.resolve();
   const q = $('#qLog').value.trim().replace(/[,()%*]/g, ' ');
   const key = $('#fRange').value + '|' + q;
   if (!$('#tbLog').children.length) $('#tbLog').innerHTML = skelRows(4);
-  if (!force && stamp.log.startsWith(key + '@') && Date.now() - Number(stamp.log.split('@')[1]) < TTL) return;
-  loading(true);
-  try {
-    const rows = await fetchAll(() => {
-      let b = db.from('riwayat_izin').select('*').gte('created_at', rangeStart()).order('created_at', { ascending:false });
-      if (q) b = b.or(`nama.ilike.%${q}%,no_reg.ilike.%${q}%`);
-      return b;
-    });
-    $('#tbLog').innerHTML = rows.length ? rows.map(r =>
-      `<tr><td>${fmt(r.created_at)}</td><td>${esc(r.no_reg)}</td><td class="font-semibold text-slate-900">${esc(r.nama)}</td><td>${esc(r.keterangan)}</td></tr>`).join('')
-      : '<tr><td colspan="4" class="empty">Tidak ada izin pada rentang ini.</td></tr>';
-    stamp.log = key + '@' + Date.now();
-  } catch(e){ toast('Gagal memuat log: ' + e.message); }
-  finally { loading(false); }
+  if (!force && stamp.log.startsWith(key + '@') && Date.now() - Number(stamp.log.split('@')[1]) < TTL) return Promise.resolve();
+  const start = rangeStart();
+  return once('log:' + key, async () => {
+    const my = ++logSeq;
+    loading(true);
+    try {
+      const rows = await fetchAll(() => {
+        let b = db.from('riwayat_izin').select('*').gte('created_at', start).order('created_at', { ascending:false }).order('id', { ascending:false });
+        if (q) b = b.or(`nama.ilike.%${q}%,no_reg.ilike.%${q}%`);
+        return b;
+      });
+      if (my !== logSeq) return; // sudah ada permintaan yang lebih baru
+      const shown = rows.slice(0, MAX_LOG_ROWS);
+      let html = shown.map(r =>
+        `<tr><td>${fmt(r.created_at)}</td><td>${esc(r.no_reg)}</td><td class="font-semibold text-slate-900">${esc(r.nama)}</td><td>${esc(r.keterangan)}</td></tr>`).join('');
+      if (rows.length > shown.length)
+        html += `<tr><td colspan="4" class="empty">Menampilkan ${shown.length} dari ${rows.length} data. Persempit rentang waktu atau gunakan pencarian.</td></tr>`;
+      $('#tbLog').innerHTML = html || '<tr><td colspan="4" class="empty">Tidak ada izin pada rentang ini.</td></tr>';
+      stamp.log = key + '@' + Date.now();
+    } catch(e){
+      if (my === logSeq) $('#tbLog').innerHTML = errRow(4, 'log');
+      fail(e, 'Gagal memuat log: ');
+    }
+    finally { loading(false); }
+  }, force);
 }
-$('#fRange').addEventListener('change', loadLog);
-$('#qLog').addEventListener('input', debounce(loadLog));
+$('#fRange').addEventListener('change', () => loadLog());
+$('#qLog').addEventListener('input', debounce(() => loadLog()));
+$('#tbLog').addEventListener('click', e => { if (e.target.closest('[data-retry]')) loadLog(true); });
 
-loadDash();
-setTimeout(() => { loadSantri(); loadLog(); }, 300); // preload agar tab langsung siap
+/* ====== INISIALISASI: wajib punya sesi login ====== */
+async function init(){
+  if (!db) { needDb(); return; }
+  let session = null;
+  try { ({ data: { session } } = await db.auth.getSession()); } catch(e){ console.error(e); }
+  if (!session) return goLogin('Silakan masuk terlebih dahulu.');
+  setUser(session.user);
+  $('#mainAppWrapper').classList.remove('hidden');
+  resetIdle(); kbFocus();
+  // Verifikasi ke server di latar belakang (mis. akun dihapus / token dicabut)
+  db.auth.getUser().then(({ error }) => { if (error && isAuthErr(error)) logout('Sesi tidak valid. Silakan masuk kembali.'); }).catch(() => {});
+  // Muat berurutan (bukan serentak) supaya tidak membebani browser & database
+  await loadDash();
+  await loadSantri();
+  await loadLog();
+}
+init();
 </script>
 </body>
 </html>
