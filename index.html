@@ -14,33 +14,41 @@
   tailwind.config = {
     theme: {
       extend: {
-        fontFamily: {
-          sans: ['"Plus Jakarta Sans"', 'sans-serif'],
-        },
-        colors: {
-          bento: {
-            bg: '#f8fafc',
-            card: '#ffffff',
-            border: '#e2e8f0',
-            dark: '#0f172a',
-            muted: '#64748b',
-            primary: '#0f172a',
-            accent: '#10b981',
-            accentBg: '#ecfdf5',
-          }
-        }
+        fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] }
       }
     }
   }
 </script>
 <style>
   body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; color: #0f172a; }
-  .bento-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 1.25rem; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.02), 0 1px 2px -1px rgba(0, 0, 0, 0.02); transition: all 0.2s ease; }
-  .bento-card:hover { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.03), 0 4px 6px -4px rgba(0, 0, 0, 0.03); }
+  .bento-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 1.25rem; box-shadow: 0 1px 3px 0 rgba(0,0,0,.02), 0 1px 2px -1px rgba(0,0,0,.02); transition: all .2s ease; }
+  .bento-card:hover { box-shadow: 0 10px 15px -3px rgba(0,0,0,.03), 0 4px 6px -4px rgba(0,0,0,.03); }
   .pulse-dot { width: 10px; height: 10px; border-radius: 50%; background: #10b981; display: inline-block; animation: pulse-anim 1.5s infinite; }
-  @keyframes pulse-anim { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
-  dialog::backdrop { background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(4px); }
-  #welcomeScreen { transition: opacity 0.4s ease, transform 0.4s ease; }
+  @keyframes pulse-anim { 0% { transform: scale(.95); box-shadow: 0 0 0 0 rgba(16,185,129,.7); } 70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(16,185,129,0); } 100% { transform: scale(.95); box-shadow: 0 0 0 0 rgba(16,185,129,0); } }
+  dialog::backdrop { background: rgba(15,23,42,.4); backdrop-filter: blur(4px); }
+  #welcomeScreen { transition: opacity .4s ease, transform .4s ease; }
+
+  /* Tab navigasi */
+  .tab-d { padding: .5rem 1rem; border-radius: .75rem; font-size: .875rem; font-weight: 600; color: #475569; transition: all .2s; }
+  .tab-d:hover { color: #0f172a; }
+  .tab-d.on { background: #fff; color: #0f172a; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+  .tab-m { padding: .375rem .75rem; border-radius: .5rem; font-size: .75rem; font-weight: 600; white-space: nowrap; background: #fff; color: #475569; border: 1px solid #e2e8f0; }
+  .tab-m.on { background: #0f172a; color: #fff; border-color: #0f172a; }
+
+  /* Tabel */
+  #tbSantri td, #tbLog td { padding: .75rem 1rem; vertical-align: middle; }
+  .empty { text-align: center; color: #94a3b8; padding: 2rem 1rem !important; }
+  .hint { color: #94a3b8; }
+  .btn-sm { padding: .25rem .75rem; border-radius: .5rem; font-size: .75rem; font-weight: 600; transition: all .2s; }
+  .btn-edit { background: #f1f5f9; color: #334155; }
+  .btn-edit:hover { background: #e2e8f0; }
+  .btn-del { background: #fef2f2; color: #dc2626; }
+  .btn-del:hover { background: #fee2e2; }
+
+  /* Hasil scan */
+  .res-ok   { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+  .res-warn { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+  .res-err  { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
 </style>
 </head>
 <body class="min-h-screen flex flex-col justify-between selection:bg-emerald-500 selection:text-white">
@@ -56,7 +64,7 @@
     <p class="text-sm text-slate-600 leading-relaxed mb-8 text-justify sm:text-center">
       Platform Perizinan Santri ini hadir untuk membantu pengelolaan perizinan santri secara terintegrasi. Sistem ini menerapkan kebijakan pembatasan izin maksimal 1 (satu) kali dalam sebulan dengan memanfaatkan teknologi NFC untuk memastikan proses pencatatan dan pengawasan berjalan secara akurat, efektif, dan efisien.
     </p>
-    <button id="btnEnterApp" class="w-full py-3.5 px-6 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 group">
+    <button id="btnEnterApp" type="button" class="w-full py-3.5 px-6 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 group">
       <span>Klik untuk Masuk</span>
       <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
     </button>
@@ -70,35 +78,34 @@
   <header class="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center font-bold text-lg shadow-sm">
-          NFC
-        </div>
+        <div class="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center font-bold text-lg shadow-sm">NFC</div>
         <div>
           <h1 class="font-bold text-slate-900 text-lg leading-tight">Perizinan Santri</h1>
-          <p class="text-xs text-slate-500 flex items-center gap-1.5 mt-0.5"><span class="pulse-dot"></span>Sistem Aktif & Terhubung</p>
+          <p class="text-xs text-slate-500 flex items-center gap-1.5 mt-0.5"><span class="pulse-dot"></span>Sistem Aktif &amp; Terhubung</p>
         </div>
       </div>
+      <!-- Navigasi desktop -->
       <nav id="nav" class="hidden md:flex items-center gap-1 bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
-        <button data-t="dash" class="px-4 py-2 rounded-xl text-sm font-semibold transition-all text-slate-600 hover:text-slate-900 on bg-white text-slate-900 shadow-sm">Dashboard</button>
-        <button data-t="scan" class="px-4 py-2 rounded-xl text-sm font-semibold transition-all text-slate-600 hover:text-slate-900">Scan Izin</button>
-        <button data-t="master" class="px-4 py-2 rounded-xl text-sm font-semibold transition-all text-slate-600 hover:text-slate-900">Data Santri</button>
-        <button data-t="log" class="px-4 py-2 rounded-xl text-sm font-semibold transition-all text-slate-600 hover:text-slate-900">Log Perizinan</button>
+        <button type="button" data-t="dash"   class="tab-d on">Dashboard</button>
+        <button type="button" data-t="scan"   class="tab-d">Scan Izin</button>
+        <button type="button" data-t="master" class="tab-d">Data Santri</button>
+        <button type="button" data-t="log"    class="tab-d">Log Perizinan</button>
       </nav>
     </div>
-    <!-- Mobile Navigation Bar -->
-    <div class="md:hidden flex overflow-x-auto gap-2 px-4 py-2 bg-slate-50 border-t border-slate-200 scrollbar-none">
-      <button data-t="dash" class="px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap bg-slate-900 text-white on">Dashboard</button>
-      <button data-t="scan" class="px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap bg-white text-slate-600 border border-slate-200">Scan Izin</button>
-      <button data-t="master" class="px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap bg-white text-slate-600 border border-slate-200">Data Santri</button>
-      <button data-t="log" class="px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap bg-white text-slate-600 border border-slate-200">Log Perizinan</button>
+    <!-- Navigasi mobile -->
+    <div id="navMobile" class="md:hidden flex overflow-x-auto gap-2 px-4 py-2 bg-slate-50 border-t border-slate-200">
+      <button type="button" data-t="dash"   class="tab-m on">Dashboard</button>
+      <button type="button" data-t="scan"   class="tab-m">Scan Izin</button>
+      <button type="button" data-t="master" class="tab-m">Data Santri</button>
+      <button type="button" data-t="log"    class="tab-m">Log Perizinan</button>
     </div>
   </header>
 
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    
+
+    <!-- DASHBOARD -->
     <section id="dash" class="space-y-6 on">
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <!-- Stat Card 1 -->
         <div class="bento-card p-6 flex flex-col justify-between relative overflow-hidden">
           <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-slate-50 rounded-full pointer-events-none"></div>
           <div>
@@ -110,8 +117,7 @@
             Terdaftar di database
           </div>
         </div>
-        
-        <!-- Stat Card 2 -->
+
         <div class="bento-card p-6 flex flex-col justify-between relative overflow-hidden">
           <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-emerald-50 rounded-full pointer-events-none"></div>
           <div>
@@ -124,20 +130,20 @@
           </div>
         </div>
 
-        <!-- Quick Action Bento -->
-        <div class="bento-card p-6 bg-slate-900 text-white flex flex-col justify-between">
+        <div class="bento-card p-6 bg-slate-900 text-white flex flex-col justify-between" style="background:#0f172a">
           <div>
             <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Aksi Cepat</span>
             <h3 class="text-lg font-bold mt-1">Mulai Scan Kartu NFC</h3>
             <p class="text-xs text-slate-300 mt-1">Gunakan reader USB atau input mandiri untuk memproses perizinan santri dengan validasi otomatis.</p>
           </div>
-          <button onclick="switchTab('scan')" class="mt-6 w-full py-2.5 px-4 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold rounded-xl transition-all shadow-sm">
+          <button type="button" id="btnQuickScan" class="mt-6 w-full py-2.5 px-4 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold rounded-xl transition-all shadow-sm">
             Buka Menu Scan &rarr;
           </button>
         </div>
       </div>
     </section>
 
+    <!-- SCAN -->
     <section id="scan" class="space-y-6 hidden">
       <div class="bento-card p-8 max-w-2xl mx-auto text-center">
         <div class="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl mx-auto flex items-center justify-center mb-4 shadow-sm border border-emerald-100">
@@ -145,7 +151,7 @@
         </div>
         <h2 class="text-xl font-bold text-slate-900">Scan Kartu NFC Santri</h2>
         <p class="text-sm text-slate-500 mt-1">Tempelkan kartu ke reader USB atau masukkan UID secara manual. Sistem membatasi izin 1x/bulan.</p>
-        
+
         <div class="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
           <div class="w-full sm:w-auto text-left">
             <label class="text-xs font-medium text-slate-500 mb-1 block">Format UID Reader</label>
@@ -163,13 +169,13 @@
           <div class="mt-2"><small class="text-xs text-slate-400">UID juga dapat diketik manual lalu tekan Enter.</small></div>
         </div>
 
-        <div id="result" class="res mt-6 p-4 rounded-xl text-sm font-semibold hidden" role="status" aria-live="polite"></div>
+        <div id="result" class="mt-6 p-4 rounded-xl text-sm font-semibold hidden" role="status" aria-live="polite"></div>
         <div id="uidInfo" class="mt-2"><small class="text-xs text-slate-500 font-mono"></small></div>
       </div>
     </section>
 
+    <!-- DATA SANTRI -->
     <section id="master" class="space-y-6 hidden">
-      <!-- Form Tambah Santri -->
       <div class="bento-card p-6">
         <h2 class="text-base font-bold text-slate-900 mb-4">Tambah Santri Baru</h2>
         <form id="formAdd" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -203,19 +209,17 @@
         </form>
       </div>
 
-      <!-- Import Excel Card -->
       <div class="bento-card p-6">
         <h2 class="text-base font-bold text-slate-900 mb-1">Import Data Excel</h2>
         <p class="text-xs text-slate-500 mb-4">Format kolom: NoReg, Nama, Alamat, Asrama, Kamar, NFC_UID (opsional). Update otomatis jika NoReg sama.</p>
         <div class="flex flex-col sm:flex-row items-center gap-3">
           <input type="file" id="fileXls" accept=".xlsx,.xls,.csv" class="w-full sm:flex-1 text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 cursor-pointer">
-          <button id="btnImport" class="w-full sm:w-auto px-5 py-2.5 bg-slate-900 text-white text-sm font-semibold rounded-xl hover:bg-slate-800 transition-all">Import Excel</button>
-          <button id="btnTpl" class="w-full sm:w-auto px-5 py-2.5 bg-slate-100 text-slate-700 text-sm font-semibold rounded-xl hover:bg-slate-200 transition-all">Unduh Template</button>
+          <button type="button" id="btnImport" class="w-full sm:w-auto px-5 py-2.5 bg-slate-900 text-white text-sm font-semibold rounded-xl hover:bg-slate-800 transition-all">Import Excel</button>
+          <button type="button" id="btnTpl" class="w-full sm:w-auto px-5 py-2.5 bg-slate-100 text-slate-700 text-sm font-semibold rounded-xl hover:bg-slate-200 transition-all">Unduh Template</button>
         </div>
         <div id="importMsg" class="mt-3 text-xs font-medium"></div>
       </div>
 
-      <!-- Daftar Santri Table Card -->
       <div class="bento-card p-6">
         <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
           <h2 class="text-base font-bold text-slate-900">Daftar Santri Terdaftar</h2>
@@ -242,6 +246,7 @@
       </div>
     </section>
 
+    <!-- LOG -->
     <section id="log" class="space-y-6 hidden">
       <div class="bento-card p-6">
         <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
@@ -272,16 +277,16 @@
     </section>
 
   </main>
-  
+
   <footer class="text-center py-8 border-t border-slate-200 text-xs text-slate-500">
-    <p>&copy; 2026 <strong class="text-slate-900">Mzhar Solution</strong>. Sistem Perizinan Santri NFC. | <a href="https://t.me/Admiin_Mzhar_Solution" target="_blank" class="text-emerald-600 font-semibold hover:underline">Hubungi via Telegram</a></p>
+    <p>&copy; 2026 <strong class="text-slate-900">Mzhar Solution</strong>. Sistem Perizinan Santri NFC. | <a href="https://t.me/Admiin_Mzhar_Solution" target="_blank" rel="noopener" class="text-emerald-600 font-semibold hover:underline">Hubungi via Telegram</a></p>
   </footer>
 </div>
 
 <!-- EDIT DIALOG -->
-<dialog id="dlgEdit" class="bento-card p-6 w-full max-w-lg shadow-2xl">
+<dialog id="dlgEdit" class="bento-card m-auto p-6 w-full max-w-lg shadow-2xl">
   <h2 class="text-lg font-bold text-slate-900 mb-4">Edit Data Santri</h2>
-  <form id="formEdit" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+  <form id="formEdit" class="grid grid-cols-1 sm:grid-cols-2 gap-4" onsubmit="return false">
     <input type="hidden" name="id">
     <div>
       <label class="text-xs font-semibold text-slate-500 mb-1 block">No. Reg *</label>
@@ -318,43 +323,54 @@
 <div id="toast" class="fixed bottom-4 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-sm px-4 py-2.5 rounded-xl shadow-xl hidden z-50 transition-all"></div>
 
 <script>
-  // Welcome Screen Handler
-  const welcomeScreen = document.getElementById('welcomeScreen');
-  const mainAppWrapper = document.getElementById('mainAppWrapper');
-  const btnEnterApp = document.getElementById('btnEnterApp');
-
-  btnEnterApp.addEventListener('click', () => {
-    welcomeScreen.style.opacity = '0';
-    welcomeScreen.style.transform = 'scale(1.05)';
-    setTimeout(() => {
-      welcomeScreen.style.display = 'none';
-      mainAppWrapper.classList.remove('hidden');
-      setTimeout(() => {
-        mainAppWrapper.style.opacity = '1';
-        const kb = document.getElementById('kbInput');
-        if (kb) kb.focus();
-      }, 50);
-    }, 400);
-  });
-
-/* ====== KONFIGURASI ====== */
-const SUPABASE_URL = 'https://alsjmuelqpocvipptoht.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFsc2ptdWVscXBvY3ZpcHB0b2h0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE1NTk1ODksImV4cCI6MjEwNzEzNTU4OX0.6ZcAdLr-6ZWPdOVtRPj2w0hazZPkvzz7gd-MY8Bslfs';
-const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
 /* ====== UTIL ====== */
 const $ = s => document.querySelector(s);
 const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clean = v => { v = String(v ?? '').trim(); return v === '' ? null : v; };
 const fmt = d => new Date(d).toLocaleString('id-ID', {dateStyle:'medium', timeStyle:'short'});
 const monthStart = () => { const n = new Date(); return new Date(n.getFullYear(), n.getMonth(), 1).toISOString(); };
-let tt; function toast(m){ const t=$('#toast'); t.textContent=m; t.style.display='block'; clearTimeout(tt); tt=setTimeout(()=>t.style.display='none',3000); }
-function debounce(fn, ms=300){ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a),ms); }; }
+let tt;
+function toast(m){
+  const t = $('#toast'); t.textContent = m;
+  t.classList.remove('hidden'); t.style.display = 'block';
+  clearTimeout(tt);
+  tt = setTimeout(() => { t.style.display = 'none'; }, 3000);
+}
+function debounce(fn, ms = 300){ let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
 const normUid = u => {
   const s = clean(u); if (!s) return null;
   if (/[^0-9a-fA-F:\-\s]/.test(s)) return s.toUpperCase();
   return s.replace(/[^0-9a-fA-F]/g, '').toUpperCase();
 };
+
+/* ====== WELCOME SCREEN (dipasang pertama agar selalu berfungsi) ====== */
+$('#btnEnterApp').addEventListener('click', () => {
+  const ws = $('#welcomeScreen'), app = $('#mainAppWrapper');
+  ws.style.opacity = '0';
+  ws.style.transform = 'scale(1.05)';
+  setTimeout(() => {
+    ws.style.display = 'none';
+    app.classList.remove('hidden');
+    setTimeout(() => { app.style.opacity = '1'; kbFocus(); }, 50);
+  }, 400);
+});
+
+/* ====== KONFIGURASI SUPABASE ====== */
+// PENTING: URL harus berbentuk https://<project-ref>.supabase.co
+// (cek di Supabase Dashboard > Project Settings > API)
+const SUPABASE_URL = 'https://alsjmuelqpocvipptoht.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFsc2ptdWVscXBvY3ZpcHB0b2h0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE1NTk1ODksImV4cCI6MjEwNzEzNTU4OX0.6ZcAdLr-6ZWPdOVtRPj2w0hazZPkvzz7gd-MY8Bslfs';
+
+let db = null;
+try {
+  db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+} catch (e) {
+  console.error('Supabase gagal diinisialisasi:', e);
+}
+function needDb(){
+  if (!db) { toast('Koneksi database belum siap. Periksa URL & key Supabase.'); return false; }
+  return true;
+}
 
 async function fetchAll(build){ // lewati batas 1000 baris Supabase
   let all = [], from = 0;
@@ -368,18 +384,30 @@ async function fetchAll(build){ // lewati batas 1000 baris Supabase
 }
 
 /* ====== NAVIGASI ====== */
-$('#nav').addEventListener('click', e => {
-  const b = e.target.closest('button'); if (!b) return;
-  document.querySelectorAll('nav button').forEach(x => x.classList.toggle('on', x === b));
-  document.querySelectorAll('main section').forEach(s => s.classList.toggle('on', s.id === b.dataset.t));
-  if (b.dataset.t !== 'scan') stopScan(); else setTimeout(kbFocus, 50);
-  ({dash: loadDash, master: loadSantri, log: loadLog}[b.dataset.t] || (()=>{}))();
-});
+function switchTab(t){
+  document.querySelectorAll('[data-t]').forEach(b => b.classList.toggle('on', b.dataset.t === t));
+  document.querySelectorAll('main > section').forEach(s => {
+    const active = s.id === t;
+    s.classList.toggle('on', active);
+    s.classList.toggle('hidden', !active);
+  });
+  if (t === 'scan') setTimeout(kbFocus, 50);
+  if (t === 'dash') loadDash();
+  if (t === 'master') loadSantri();
+  if (t === 'log') loadLog();
+}
+['#nav', '#navMobile'].forEach(sel => $(sel).addEventListener('click', e => {
+  const b = e.target.closest('button[data-t]'); if (!b) return;
+  switchTab(b.dataset.t);
+}));
+$('#btnQuickScan').addEventListener('click', () => switchTab('scan'));
 
 /* ====== DASHBOARD ====== */
 async function loadDash(){
+  if (!needDb()) return;
   try {
-    const { count } = await db.from('santri').select('*', { count:'exact', head:true });
+    const { count, error } = await db.from('santri').select('*', { count:'exact', head:true });
+    if (error) throw error;
     $('#stTotal').textContent = count ?? 0;
     const rows = await fetchAll(() => db.from('riwayat_izin').select('no_reg').gte('created_at', monthStart()));
     $('#stIzin').textContent = new Set(rows.map(r => r.no_reg)).size;
@@ -389,6 +417,7 @@ async function loadDash(){
 /* ====== MASTER SANTRI ====== */
 let santriCache = [];
 async function loadSantri(){
+  if (!needDb()) return;
   try {
     santriCache = await fetchAll(() => db.from('santri').select('*').order('nama'));
     renderSantri();
@@ -396,20 +425,27 @@ async function loadSantri(){
 }
 function renderSantri(){
   const q = $('#qSantri').value.trim().toLowerCase();
-  const rows = santriCache.filter(s => !q || [s.no_reg,s.nama,s.asrama,s.kamar,s.alamat].some(v => (v||'').toLowerCase().includes(q)));
+  const rows = santriCache.filter(s => !q || [s.no_reg,s.nama,s.asrama,s.kamar,s.alamat].some(v => String(v||'').toLowerCase().includes(q)));
   $('#tbSantri').innerHTML = rows.length ? rows.map(s => `
-    <tr><td>${esc(s.no_reg)}</td><td>${esc(s.nama)}</td><td>${esc(s.asrama)}</td><td>${esc(s.kamar)}</td>
-    <td>${esc(s.alamat)}</td><td>${esc(s.nfc_uid) || '<small class="hint">belum ada</small>'}</td>
-    <td><button class="btn sm sec" data-edit="${s.id}">Edit</button>
-        <button class="btn sm red" data-del="${s.id}">Hapus</button></td></tr>`).join('')
+    <tr>
+      <td>${esc(s.no_reg)}</td><td class="font-semibold text-slate-900">${esc(s.nama)}</td>
+      <td>${esc(s.asrama)}</td><td>${esc(s.kamar)}</td>
+      <td>${esc(s.alamat)}</td>
+      <td class="font-mono text-xs">${s.nfc_uid ? esc(s.nfc_uid) : '<span class="hint">belum ada</span>'}</td>
+      <td class="text-right whitespace-nowrap">
+        <button type="button" class="btn-sm btn-edit" data-edit="${esc(s.id)}">Edit</button>
+        <button type="button" class="btn-sm btn-del" data-del="${esc(s.id)}">Hapus</button>
+      </td>
+    </tr>`).join('')
     : '<tr><td colspan="7" class="empty">Belum ada data santri.</td></tr>';
 }
 $('#qSantri').addEventListener('input', debounce(renderSantri, 150));
 
 $('#formAdd').addEventListener('submit', async e => {
   e.preventDefault();
+  if (!needDb()) return;
   const f = Object.fromEntries(new FormData(e.target));
-  const row = { no_reg: f.no_reg.trim(), nama: f.nama.trim(), alamat: clean(f.alamat), asrama: clean(f.asrama), kamar: clean(f.kamar), nfc_uid: normUid(f.nfc_uid) };
+  const row = { no_reg: f.no_reg.trim(), nama: f.nama.trim(), alamat: clean(f.alamat), asrama: clean(f.asrama), kamar: clean(f.kamar), nfc_uid: fmtUid(f.nfc_uid) };
   const { error } = await db.from('santri').insert(row);
   if (error) return toast(error.code === '23505' ? 'No. Reg atau NFC UID sudah dipakai.' : 'Gagal: ' + error.message);
   e.target.reset(); toast('Santri ditambahkan.'); loadSantri();
@@ -418,13 +454,15 @@ $('#formAdd').addEventListener('submit', async e => {
 $('#tbSantri').addEventListener('click', async e => {
   const ed = e.target.closest('[data-edit]'), del = e.target.closest('[data-del]');
   if (ed) {
-    const s = santriCache.find(x => x.id === ed.dataset.edit);
+    const s = santriCache.find(x => String(x.id) === ed.dataset.edit);
+    if (!s) return;
     const f = $('#formEdit');
     for (const k of ['id','no_reg','nama','alamat','asrama','kamar','nfc_uid']) f.elements[k].value = s[k] ?? '';
     $('#dlgEdit').showModal();
   }
   if (del) {
-    const s = santriCache.find(x => x.id === del.dataset.del);
+    const s = santriCache.find(x => String(x.id) === del.dataset.del);
+    if (!s) return;
     if (!confirm(`Hapus ${s.nama} (${s.no_reg})? Riwayat izinnya juga ikut terhapus.`)) return;
     const { error } = await db.from('santri').delete().eq('id', s.id);
     if (error) return toast('Gagal hapus: ' + error.message);
@@ -432,21 +470,22 @@ $('#tbSantri').addEventListener('click', async e => {
   }
 });
 
-$('#btnEditCancel').onclick = () => { stopScan(); $('#dlgEdit').close(); };
-$('#btnEditSave').onclick = async () => {
+$('#btnEditCancel').addEventListener('click', () => { $('#dlgEdit').close(); });
+$('#btnEditSave').addEventListener('click', async () => {
+  if (!needDb()) return;
   const f = $('#formEdit'); if (!f.reportValidity()) return;
   const v = Object.fromEntries(new FormData(f));
   const { error } = await db.from('santri').update({
     no_reg: v.no_reg.trim(), nama: v.nama.trim(), alamat: clean(v.alamat),
-    asrama: clean(v.asrama), kamar: clean(v.kamar), nfc_uid: normUid(v.nfc_uid)
+    asrama: clean(v.asrama), kamar: clean(v.kamar), nfc_uid: fmtUid(v.nfc_uid)
   }).eq('id', v.id);
   if (error) return toast(error.code === '23505' ? 'No. Reg atau NFC UID sudah dipakai santri lain.' : 'Gagal: ' + error.message);
-  stopScan(); $('#dlgEdit').close(); toast('Perubahan disimpan.'); loadSantri();
-};
+  $('#dlgEdit').close(); toast('Perubahan disimpan.'); loadSantri();
+});
 // Scan kartu baru langsung ke kolom NFC UID (untuk kartu hilang/ganti)
-$('#btnEditScan').onclick = () => { // UID "diketik" oleh reader USB ke kolom ini
+$('#btnEditScan').addEventListener('click', () => {
   $('#editUid').value = ''; $('#editUid').focus(); toast('Tempelkan kartu ke reader USB.');
-};
+});
 // Reader USB mengirim Enter setelah UID: konversi format, jangan kirim form
 ['#addUid', '#editUid'].forEach(id => $(id).addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
@@ -454,15 +493,16 @@ $('#btnEditScan').onclick = () => { // UID "diketik" oleh reader USB ke kolom in
 }));
 
 /* ====== IMPORT / TEMPLATE EXCEL ====== */
-$('#btnTpl').onclick = () => {
+$('#btnTpl').addEventListener('click', () => {
   const ws = XLSX.utils.aoa_to_sheet([['NoReg','Nama','Alamat','Asrama','Kamar','NFC_UID'],['2024001','Ahmad Fulan','Surabaya','Al-Falah','A1','']]);
   const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Santri');
   XLSX.writeFile(wb, 'template_santri.xlsx');
-};
-$('#btnImport').onclick = async () => {
+});
+$('#btnImport').addEventListener('click', async () => {
+  if (!needDb()) return;
   const file = $('#fileXls').files[0], msg = $('#importMsg');
   if (!file) return toast('Pilih file Excel dulu.');
-  const btn = $('#btnImport'); btn.disabled = true; msg.textContent = 'Membaca file…';
+  const btn = $('#btnImport'); btn.disabled = true; msg.className = 'mt-3 text-xs font-medium text-slate-500'; msg.textContent = 'Membaca file…';
   try {
     const wb = XLSX.read(await file.arrayBuffer());
     const raw = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval:'' });
@@ -471,7 +511,7 @@ $('#btnImport').onclick = async () => {
     raw.forEach(r => {
       const no_reg = String(get(r,'noreg','noregistrasi')).trim(), nama = String(get(r,'nama')).trim();
       if (!no_reg || !nama) { skip++; return; }
-      map.set(no_reg, { no_reg, nama, alamat: clean(get(r,'alamat')), asrama: clean(get(r,'asrama')), kamar: clean(get(r,'kamar')), nfc_uid: normUid(get(r,'nfcuid','uid')) });
+      map.set(no_reg, { no_reg, nama, alamat: clean(get(r,'alamat')), asrama: clean(get(r,'asrama')), kamar: clean(get(r,'kamar')), nfc_uid: fmtUid(get(r,'nfcuid','uid')) });
     });
     const rows = [...map.values()];
     for (let i = 0; i < rows.length; i += 200) {
@@ -479,19 +519,20 @@ $('#btnImport').onclick = async () => {
       const { error } = await db.from('santri').upsert(rows.slice(i, i+200), { onConflict:'no_reg' });
       if (error) throw error;
     }
-    msg.innerHTML = `<span style="color:var(--ok)">Selesai: ${rows.length} santri diimpor${skip ? `, ${skip} baris dilewati (NoReg/Nama kosong)` : ''}.</span>`;
+    msg.className = 'mt-3 text-xs font-medium text-emerald-600';
+    msg.textContent = `Selesai: ${rows.length} santri diimpor${skip ? `, ${skip} baris dilewati (NoReg/Nama kosong)` : ''}.`;
     $('#fileXls').value = ''; loadSantri();
   } catch(e){
-    msg.innerHTML = `<span style="color:var(--err)">Gagal import: ${esc(e.message)}${e.code==='23505' ? ' (ada NFC_UID ganda)' : ''}</span>`;
+    msg.className = 'mt-3 text-xs font-medium text-red-600';
+    msg.textContent = `Gagal import: ${e.message}${e.code === '23505' ? ' (ada NFC_UID ganda)' : ''}`;
   } finally { btn.disabled = false; }
-};
+});
 
 /* ====== NFC ====== */
-const mode = () => 'kb';
 const revBytes = u => u && u.match(/../g).reverse().join('');
 function fmtUid(raw){ // samakan format UID dari sumber apa pun ke format tersimpan
   raw = clean(raw); if (!raw) return null;
-  const f = mode() === 'kb' ? $('#selFmt').value : 'hex';
+  const f = $('#selFmt').value;
   if (f === 'dec' || f === 'decrev') {
     if (!/^\d+$/.test(raw)) return normUid(raw);
     let h = BigInt(raw).toString(16); if (h.length % 2) h = '0' + h; h = h.padStart(8, '0');
@@ -499,30 +540,47 @@ function fmtUid(raw){ // samakan format UID dari sumber apa pun ke format tersim
   }
   const u = normUid(raw); return f === 'hexrev' ? revBytes(u) : u;
 }
-const store = { get:k => { try { return localStorage.getItem(k); } catch(e){ return null; } }, set:(k,v) => { try { localStorage.setItem(k,v); } catch(e){} } };
-function applyMode(){ kbFocus(); }
-function kbFocus(){ if (mode() === 'kb' && $('#scan').classList.contains('on') && !$('#dlgEdit').open) $('#kbInput').focus(); }
+const store = {
+  get: k => { try { return localStorage.getItem(k); } catch(e){ return null; } },
+  set: (k, v) => { try { localStorage.setItem(k, v); } catch(e){} }
+};
+function kbFocus(){
+  if ($('#scan').classList.contains('on') && !$('#dlgEdit').open) $('#kbInput').focus();
+}
+$('#selFmt').value = store.get('scanFmt') || 'hex';
 $('#selFmt').addEventListener('change', () => { store.set('scanFmt', $('#selFmt').value); kbFocus(); });
+
 let kbTimer;
-const kbSubmit = () => { clearTimeout(kbTimer); const el = $('#kbInput'), v = el.value.trim(); el.value = ''; if (v) processScan(v); };
+const kbSubmit = () => {
+  clearTimeout(kbTimer);
+  const el = $('#kbInput'), v = el.value.trim();
+  el.value = '';
+  if (v) processScan(v);
+};
 $('#kbInput').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); kbSubmit(); } });
-$('#kbInput').addEventListener('input', () => { clearTimeout(kbTimer); kbTimer = setTimeout(() => { if ($('#kbInput').value.trim().length >= 6) kbSubmit(); }, 500); }); // reader tanpa Enter
+$('#kbInput').addEventListener('input', () => { // reader tanpa Enter
+  clearTimeout(kbTimer);
+  kbTimer = setTimeout(() => { if ($('#kbInput').value.trim().length >= 6) kbSubmit(); }, 500);
+});
 $('#kbInput').addEventListener('blur', () => setTimeout(() => { if (document.activeElement === document.body) kbFocus(); }, 200));
 $('#panelKb').addEventListener('click', kbFocus);
-$('#selFmt').value = store.get('scanFmt') || 'hex';
-applyMode();
-function stopScan(){}
-function showRes(type, text){ const r = $('#result'); r.className = 'res ' + type; r.textContent = text; }
 
+function showRes(type, text){
+  const r = $('#result');
+  r.className = 'mt-6 p-4 rounded-xl text-sm font-semibold res-' + type;
+  r.textContent = text;
+}
 
 let busy = false;
 async function processScan(serial){
-  if (busy) return; busy = true;
+  if (busy || !needDb()) return;
+  busy = true;
   try {
-    const uid = fmtUid(serial); $('#uidInfo small').textContent = 'UID terbaca: ' + (uid || '-');
+    const uid = fmtUid(serial);
+    $('#uidInfo small').textContent = 'UID terbaca: ' + (uid || '-');
     const { data: s, error } = await db.from('santri').select('no_reg,nama').eq('nfc_uid', uid).maybeSingle();
     if (error) throw error;
-    if (!s) return showRes('err', 'Kartu NFC tidak terdaftar! Jika kartu hilang/ganti, silakan perbarui nfc_uid di Master Data Santri.');
+    if (!s) return showRes('err', 'Kartu NFC tidak terdaftar! Jika kartu hilang/ganti, silakan perbarui nfc_uid di Data Santri.');
     const { count, error: e2 } = await db.from('riwayat_izin').select('id', { count:'exact', head:true })
       .eq('no_reg', s.no_reg).gte('created_at', monthStart());
     if (e2) throw e2;
@@ -530,8 +588,11 @@ async function processScan(serial){
     const { error: e3 } = await db.from('riwayat_izin').insert({ no_reg: s.no_reg, nama: s.nama, keterangan: 'Izin via scan NFC' });
     if (e3) throw e3;
     showRes('ok', `Izin Disetujui untuk ${s.nama}!`);
-  } catch(e){ showRes('err', 'Terjadi kesalahan: ' + e.message); }
-  finally { setTimeout(() => busy = false, 1500); } // cegah scan ganda beruntun
+  } catch(e){
+    showRes('err', 'Terjadi kesalahan: ' + e.message);
+  } finally {
+    setTimeout(() => { busy = false; kbFocus(); }, 1500); // cegah scan ganda beruntun
+  }
 }
 
 /* ====== LOG ====== */
@@ -542,6 +603,7 @@ function rangeStart(){
   return monthStart();
 }
 async function loadLog(){
+  if (!needDb()) return;
   try {
     const q = $('#qLog').value.trim().replace(/[,()%*]/g, ' ');
     const rows = await fetchAll(() => {
@@ -550,7 +612,7 @@ async function loadLog(){
       return b;
     });
     $('#tbLog').innerHTML = rows.length ? rows.map(r =>
-      `<tr><td>${fmt(r.created_at)}</td><td>${esc(r.no_reg)}</td><td>${esc(r.nama)}</td><td>${esc(r.keterangan)}</td></tr>`).join('')
+      `<tr><td>${fmt(r.created_at)}</td><td>${esc(r.no_reg)}</td><td class="font-semibold text-slate-900">${esc(r.nama)}</td><td>${esc(r.keterangan)}</td></tr>`).join('')
       : '<tr><td colspan="4" class="empty">Tidak ada izin pada rentang ini.</td></tr>';
   } catch(e){ toast('Gagal memuat log: ' + e.message); }
 }
