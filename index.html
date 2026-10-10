@@ -318,6 +318,25 @@
 <div id="toast" class="fixed bottom-4 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-sm px-4 py-2.5 rounded-xl shadow-xl hidden z-50 transition-all"></div>
 
 <script>
+  // Welcome Screen Handler
+  const welcomeScreen = document.getElementById('welcomeScreen');
+  const mainAppWrapper = document.getElementById('mainAppWrapper');
+  const btnEnterApp = document.getElementById('btnEnterApp');
+
+  btnEnterApp.addEventListener('click', () => {
+    welcomeScreen.style.opacity = '0';
+    welcomeScreen.style.transform = 'scale(1.05)';
+    setTimeout(() => {
+      welcomeScreen.style.display = 'none';
+      mainAppWrapper.classList.remove('hidden');
+      setTimeout(() => {
+        mainAppWrapper.style.opacity = '1';
+        const kb = document.getElementById('kbInput');
+        if (kb) kb.focus();
+      }, 50);
+    }, 400);
+  });
+
 /* ====== KONFIGURASI ====== */
 const SUPABASE_URL = 'https://alsjmuelqpocvipptoht.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFsc2ptdWVscXBvY3ZpcHB0b2h0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE1NTk1ODksImV4cCI6MjEwNzEzNTU4OX0.6ZcAdLr-6ZWPdOVtRPj2w0hazZPkvzz7gd-MY8Bslfs';
