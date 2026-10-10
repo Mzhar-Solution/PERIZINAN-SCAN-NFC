@@ -2,192 +2,320 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Perizinan Santri NFC</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Perizinan Santri NFC - Bento Edition</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+        },
+        colors: {
+          bento: {
+            bg: '#f8fafc',
+            card: '#ffffff',
+            border: '#e2e8f0',
+            dark: '#0f172a',
+            muted: '#64748b',
+            primary: '#0f172a',
+            accent: '#10b981',
+            accentBg: '#ecfdf5',
+          }
+        }
+      }
+    }
+  }
+</script>
 <style>
-:root{--bg:#f3f5f2;--card:#fff;--ink:#17261f;--mute:#5d6b63;--line:#dce3de;--pri:#14532d;--pri-ink:#fff;--ok:#166534;--okbg:#dcfce7;--err:#991b1b;--errbg:#fee2e2;--warn:#92400e;--warnbg:#fef3c7}
-*{box-sizing:border-box}
-body{margin:0;font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink)}
-header{background:var(--pri);color:var(--pri-ink);padding:14px 16px;position:sticky;top:0;z-index:5}
-header h1{margin:0;font-size:17px}
-nav{display:flex;gap:4px;overflow-x:auto;margin-top:10px}
-nav button{background:transparent;color:#d1e7d9;border:0;padding:8px 14px;border-radius:8px;font:inherit;cursor:pointer;white-space:nowrap}
-nav button.on{background:#fff;color:var(--pri);font-weight:600}
-main{max-width:1000px;margin:0 auto;padding:16px}
-section{display:none}section.on{display:block}
-.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:16px}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:16px}
-.stat b{display:block;font-size:34px;line-height:1.1}.stat span{color:var(--mute)}
-h2{margin:0 0 12px;font-size:17px}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
-label{display:block;font-size:13px;color:var(--mute);margin-bottom:3px}
-input,select{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;font:inherit;background:#fff;color:var(--ink)}
-input:focus,select:focus,button:focus-visible{outline:2px solid var(--pri);outline-offset:1px}
-.btn{background:var(--pri);color:#fff;border:0;padding:9px 16px;border-radius:8px;font:inherit;cursor:pointer}
-.btn.sec{background:#e8eee9;color:var(--ink)}.btn.red{background:var(--err)}.btn.sm{padding:4px 10px;font-size:13px}
-.btn:disabled{opacity:.5;cursor:not-allowed}
-.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px}
-.tools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.tools input,.tools select{flex:1;min-width:150px;width:auto}
-.tw{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:14px}
-th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
-th{color:var(--mute);font-weight:600;font-size:13px}
-.empty{color:var(--mute);text-align:center;padding:20px}
-.scan{text-align:center;padding:28px 16px}
-.res{margin-top:16px;padding:18px;border-radius:12px;font-size:17px;font-weight:600;display:none}
-.res.ok{display:block;background:var(--okbg);color:var(--ok)}
-.res.err{display:block;background:var(--errbg);color:var(--err)}
-.res.warn{display:block;background:var(--warnbg);color:var(--warn)}
-.pulse{width:14px;height:14px;border-radius:50%;background:#16a34a;display:inline-block;margin-right:8px;animation:p 1.2s infinite}
-@keyframes p{50%{opacity:.25}}
-@media(prefers-reduced-motion:reduce){.pulse{animation:none}}
-dialog{border:0;border-radius:12px;padding:20px;width:min(560px,94vw)}
-dialog::backdrop{background:rgba(0,0,0,.4)}
-#toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:8px;display:none;z-index:20;max-width:90vw}
-small.hint{color:var(--mute)}
-
-  footer {
-  text-align: center;
-  padding: 24px 16px;
-  margin-top: 32px;
-  color: var(--mute);
-  font-size: 13px;
-  border-top: 1px solid var(--line);
-}
-footer a {
-  color: var(--pri);
-  text-decoration: none;
-  font-weight: 600;
-}
-footer a:hover {
-  text-decoration: underline;
-}
+  body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; color: #0f172a; }
+  .bento-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 1.25rem; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.02), 0 1px 2px -1px rgba(0, 0, 0, 0.02); transition: all 0.2s ease; }
+  .bento-card:hover { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.03), 0 4px 6px -4px rgba(0, 0, 0, 0.03); }
+  .pulse-dot { width: 10px; height: 10px; border-radius: 50%; background: #10b981; display: inline-block; animation: pulse-anim 1.5s infinite; }
+  @keyframes pulse-anim { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
+  dialog::backdrop { background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(4px); }
+  #welcomeScreen { transition: opacity 0.4s ease, transform 0.4s ease; }
 </style>
 </head>
-<body>
-<header>
-  <h1>Perizinan Santri Berbasis NFC</h1>
-  <nav id="nav">
-    <button data-t="dash" class="on">Dashboard</button>
-    <button data-t="scan">Scan Izin</button>
-    <button data-t="master">Data Santri</button>
-    <button data-t="log">Log Perizinan</button>
-  </nav>
-</header>
+<body class="min-h-screen flex flex-col justify-between selection:bg-emerald-500 selection:text-white">
 
-<main>
-<!-- DASHBOARD -->
-<section id="dash" class="on">
-  <div class="stats">
-    <div class="card stat"><b id="stTotal">–</b><span>Total santri terdaftar</span></div>
-    <div class="card stat"><b id="stIzin">–</b><span>Santri izin bulan ini</span></div>
-  </div>
-</section>
-
-<!-- SCAN -->
-<section id="scan">
-  <div class="card scan">
-    <h2>Scan Kartu NFC</h2>
-    <div class="tools" style="justify-content:center">
-      <div style="flex:0 1 260px"><label>Format UID dari reader</label>
-        <select id="selFmt">
-          <option value="hex">Hex (04A1B2C3)</option>
-          <option value="hexrev">Hex, urutan byte dibalik</option>
-          <option value="dec">Desimal (mis. 3282547460)</option>
-          <option value="decrev">Desimal, urutan byte dibalik</option>
-        </select></div>
+<!-- WELCOME SCREEN OVERLAY -->
+<div id="welcomeScreen" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4">
+  <div class="bento-card bg-white p-8 sm:p-10 max-w-xl w-full text-center shadow-2xl relative overflow-hidden">
+    <div class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-emerald-500 to-slate-900"></div>
+    <div class="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl mx-auto flex items-center justify-center mb-6 shadow-sm border border-emerald-100">
+      <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.115 6.848l.015-.045M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
     </div>
-    <div id="panelKb">
-      <p style="color:var(--mute);margin-top:0">Colok reader USB, lalu tempelkan kartu ke reader. Kolom di bawah harus aktif (kursor berkedip).</p>
-      <input id="kbInput" autocomplete="off" inputmode="none" placeholder="Menunggu kartu dari reader…" style="max-width:360px;text-align:center">
-      <div style="margin-top:8px"><small class="hint">UID juga bisa diketik manual lalu tekan Enter.</small></div>
+    <h1 class="text-2xl font-bold text-slate-900 mb-2">Selamat Datang, User</h1>
+    <p class="text-sm text-slate-600 leading-relaxed mb-8 text-justify sm:text-center">
+      Platform Perizinan Santri ini hadir untuk membantu pengelolaan perizinan santri secara terintegrasi. Sistem ini menerapkan kebijakan pembatasan izin maksimal 1 (satu) kali dalam sebulan dengan memanfaatkan teknologi NFC untuk memastikan proses pencatatan dan pengawasan berjalan secara akurat, efektif, dan efisien.
+    </p>
+    <button id="btnEnterApp" class="w-full py-3.5 px-6 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 group">
+      <span>Klik untuk Masuk</span>
+      <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+    </button>
+    <div class="mt-6 text-xs text-slate-400 font-medium">
+      Dikembangkan oleh Mzhar_Solution &copy; 2026
     </div>
-    <div id="result" class="res" role="status" aria-live="polite"></div>
-    <div id="uidInfo" style="margin-top:8px"><small class="hint"></small></div>
   </div>
-</section>
+</div>
 
-<!-- MASTER -->
-<section id="master">
-  <div class="card">
-    <h2>Tambah Santri</h2>
-    <form id="formAdd" class="grid">
-      <div><label>No. Reg *</label><input name="no_reg" required></div>
-      <div><label>Nama *</label><input name="nama" required></div>
-      <div><label>Alamat</label><input name="alamat"></div>
-      <div><label>Asrama</label><input name="asrama"></div>
-      <div><label>Kamar</label><input name="kamar"></div>
-      <div><label>NFC UID (opsional)</label><input name="nfc_uid" id="addUid" placeholder="04:A1:B2:... (atau tempel kartu ke reader USB)"></div>
-      <div style="align-self:end"><button class="btn" type="submit">Simpan</button></div>
-    </form>
-  </div>
-
-  <div class="card">
-    <h2>Import Excel</h2>
-    <small class="hint">Kolom: NoReg, Nama, Alamat, Asrama, Kamar, NFC_UID (opsional). Data dengan NoReg yang sama akan diperbarui.</small>
-    <div class="row">
-      <input type="file" id="fileXls" accept=".xlsx,.xls,.csv" style="flex:1;min-width:200px">
-      <button class="btn" id="btnImport">Import</button>
-      <button class="btn sec" id="btnTpl">Unduh template</button>
+<div id="mainAppWrapper" class="opacity-0 transition-opacity duration-500 hidden">
+  <header class="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center font-bold text-lg shadow-sm">
+          NFC
+        </div>
+        <div>
+          <h1 class="font-bold text-slate-900 text-lg leading-tight">Perizinan Santri</h1>
+          <p class="text-xs text-slate-500 flex items-center gap-1.5 mt-0.5"><span class="pulse-dot"></span>Sistem Aktif & Terhubung</p>
+        </div>
+      </div>
+      <nav id="nav" class="hidden md:flex items-center gap-1 bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
+        <button data-t="dash" class="px-4 py-2 rounded-xl text-sm font-semibold transition-all text-slate-600 hover:text-slate-900 on bg-white text-slate-900 shadow-sm">Dashboard</button>
+        <button data-t="scan" class="px-4 py-2 rounded-xl text-sm font-semibold transition-all text-slate-600 hover:text-slate-900">Scan Izin</button>
+        <button data-t="master" class="px-4 py-2 rounded-xl text-sm font-semibold transition-all text-slate-600 hover:text-slate-900">Data Santri</button>
+        <button data-t="log" class="px-4 py-2 rounded-xl text-sm font-semibold transition-all text-slate-600 hover:text-slate-900">Log Perizinan</button>
+      </nav>
     </div>
-    <div id="importMsg" style="margin-top:8px"></div>
-  </div>
-
-  <div class="card">
-    <h2>Daftar Santri</h2>
-    <div class="tools"><input id="qSantri" type="search" placeholder="Cari nama, No. Reg, asrama, kamar…"></div>
-    <div class="tw"><table>
-      <thead><tr><th>No. Reg</th><th>Nama</th><th>Asrama</th><th>Kamar</th><th>Alamat</th><th>NFC UID</th><th></th></tr></thead>
-      <tbody id="tbSantri"></tbody>
-    </table></div>
-  </div>
-</section>
-
-<!-- LOG -->
-<section id="log">
-  <div class="card">
-    <h2>Log Perizinan</h2>
-    <div class="tools">
-      <select id="fRange">
-        <option value="day">Hari ini</option>
-        <option value="week">7 hari terakhir</option>
-        <option value="month" selected>Bulan ini</option>
-      </select>
-      <input id="qLog" type="search" placeholder="Cari nama / No. Reg…">
+    <!-- Mobile Navigation Bar -->
+    <div class="md:hidden flex overflow-x-auto gap-2 px-4 py-2 bg-slate-50 border-t border-slate-200 scrollbar-none">
+      <button data-t="dash" class="px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap bg-slate-900 text-white on">Dashboard</button>
+      <button data-t="scan" class="px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap bg-white text-slate-600 border border-slate-200">Scan Izin</button>
+      <button data-t="master" class="px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap bg-white text-slate-600 border border-slate-200">Data Santri</button>
+      <button data-t="log" class="px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap bg-white text-slate-600 border border-slate-200">Log Perizinan</button>
     </div>
-    <div class="tw"><table>
-      <thead><tr><th>Waktu</th><th>No. Reg</th><th>Nama</th><th>Keterangan</th></tr></thead>
-      <tbody id="tbLog"></tbody>
-    </table></div>
-  </div>
-</section>
-</main>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    
+    <section id="dash" class="space-y-6 on">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Stat Card 1 -->
+        <div class="bento-card p-6 flex flex-col justify-between relative overflow-hidden">
+          <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-slate-50 rounded-full pointer-events-none"></div>
+          <div>
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Santri</span>
+            <div class="text-4xl font-bold text-slate-900 mt-2" id="stTotal">–</div>
+          </div>
+          <div class="mt-6 flex items-center text-xs text-slate-500 gap-1 font-medium">
+            <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+            Terdaftar di database
+          </div>
+        </div>
+        
+        <!-- Stat Card 2 -->
+        <div class="bento-card p-6 flex flex-col justify-between relative overflow-hidden">
+          <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-emerald-50 rounded-full pointer-events-none"></div>
+          <div>
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Santri Izin Bulan Ini</span>
+            <div class="text-4xl font-bold text-slate-900 mt-2" id="stIzin">–</div>
+          </div>
+          <div class="mt-6 flex items-center text-xs text-emerald-600 gap-1 font-medium">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            Maksimal 1x per bulan per santri
+          </div>
+        </div>
+
+        <!-- Quick Action Bento -->
+        <div class="bento-card p-6 bg-slate-900 text-white flex flex-col justify-between">
+          <div>
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Aksi Cepat</span>
+            <h3 class="text-lg font-bold mt-1">Mulai Scan Kartu NFC</h3>
+            <p class="text-xs text-slate-300 mt-1">Gunakan reader USB atau input mandiri untuk memproses perizinan santri dengan validasi otomatis.</p>
+          </div>
+          <button onclick="switchTab('scan')" class="mt-6 w-full py-2.5 px-4 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold rounded-xl transition-all shadow-sm">
+            Buka Menu Scan &rarr;
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section id="scan" class="space-y-6 hidden">
+      <div class="bento-card p-8 max-w-2xl mx-auto text-center">
+        <div class="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl mx-auto flex items-center justify-center mb-4 shadow-sm border border-emerald-100">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
+        </div>
+        <h2 class="text-xl font-bold text-slate-900">Scan Kartu NFC Santri</h2>
+        <p class="text-sm text-slate-500 mt-1">Tempelkan kartu ke reader USB atau masukkan UID secara manual. Sistem membatasi izin 1x/bulan.</p>
+        
+        <div class="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+          <div class="w-full sm:w-auto text-left">
+            <label class="text-xs font-medium text-slate-500 mb-1 block">Format UID Reader</label>
+            <select id="selFmt" class="w-full sm:w-64 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-slate-900 transition-all">
+              <option value="hex">Hex (04A1B2C3)</option>
+              <option value="hexrev">Hex, urutan byte dibalik</option>
+              <option value="dec">Desimal (mis. 3282547460)</option>
+              <option value="decrev">Desimal, urutan byte dibalik</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="panelKb" class="mt-6">
+          <input id="kbInput" autocomplete="off" inputmode="none" placeholder="Menunggu kartu dari reader..." class="w-full max-w-md mx-auto px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-center font-mono text-sm focus:outline-none focus:border-slate-900 transition-all shadow-inner">
+          <div class="mt-2"><small class="text-xs text-slate-400">UID juga dapat diketik manual lalu tekan Enter.</small></div>
+        </div>
+
+        <div id="result" class="res mt-6 p-4 rounded-xl text-sm font-semibold hidden" role="status" aria-live="polite"></div>
+        <div id="uidInfo" class="mt-2"><small class="text-xs text-slate-500 font-mono"></small></div>
+      </div>
+    </section>
+
+    <section id="master" class="space-y-6 hidden">
+      <!-- Form Tambah Santri -->
+      <div class="bento-card p-6">
+        <h2 class="text-base font-bold text-slate-900 mb-4">Tambah Santri Baru</h2>
+        <form id="formAdd" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div>
+            <label class="text-xs font-semibold text-slate-500 mb-1 block">No. Reg *</label>
+            <input name="no_reg" required class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-slate-900">
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-500 mb-1 block">Nama *</label>
+            <input name="nama" required class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-slate-900">
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-500 mb-1 block">Alamat</label>
+            <input name="alamat" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-slate-900">
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-500 mb-1 block">Asrama</label>
+            <input name="asrama" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-slate-900">
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-500 mb-1 block">Kamar</label>
+            <input name="kamar" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-slate-900">
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-slate-500 mb-1 block">NFC UID (opsional)</label>
+            <input name="nfc_uid" id="addUid" placeholder="04:A1:B2..." class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-slate-900 font-mono">
+          </div>
+          <div class="sm:col-span-2 lg:col-span-3 flex justify-end">
+            <button type="submit" class="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold rounded-xl transition-all shadow-sm">Simpan Santri</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Import Excel Card -->
+      <div class="bento-card p-6">
+        <h2 class="text-base font-bold text-slate-900 mb-1">Import Data Excel</h2>
+        <p class="text-xs text-slate-500 mb-4">Format kolom: NoReg, Nama, Alamat, Asrama, Kamar, NFC_UID (opsional). Update otomatis jika NoReg sama.</p>
+        <div class="flex flex-col sm:flex-row items-center gap-3">
+          <input type="file" id="fileXls" accept=".xlsx,.xls,.csv" class="w-full sm:flex-1 text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 cursor-pointer">
+          <button id="btnImport" class="w-full sm:w-auto px-5 py-2.5 bg-slate-900 text-white text-sm font-semibold rounded-xl hover:bg-slate-800 transition-all">Import Excel</button>
+          <button id="btnTpl" class="w-full sm:w-auto px-5 py-2.5 bg-slate-100 text-slate-700 text-sm font-semibold rounded-xl hover:bg-slate-200 transition-all">Unduh Template</button>
+        </div>
+        <div id="importMsg" class="mt-3 text-xs font-medium"></div>
+      </div>
+
+      <!-- Daftar Santri Table Card -->
+      <div class="bento-card p-6">
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
+          <h2 class="text-base font-bold text-slate-900">Daftar Santri Terdaftar</h2>
+          <div class="w-full sm:w-72">
+            <input id="qSantri" type="search" placeholder="Cari nama, No. Reg, asrama..." class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-slate-900">
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="border-b border-slate-200 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                <th class="py-3 px-4">No. Reg</th>
+                <th class="py-3 px-4">Nama</th>
+                <th class="py-3 px-4">Asrama</th>
+                <th class="py-3 px-4">Kamar</th>
+                <th class="py-3 px-4">Alamat</th>
+                <th class="py-3 px-4">NFC UID</th>
+                <th class="py-3 px-4 text-right">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="tbSantri" class="divide-y divide-slate-100 text-sm text-slate-700"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="log" class="space-y-6 hidden">
+      <div class="bento-card p-6">
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
+          <h2 class="text-base font-bold text-slate-900">Log Aktivitas Perizinan</h2>
+          <div class="flex items-center gap-3 w-full sm:w-auto">
+            <select id="fRange" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-slate-900">
+              <option value="day">Hari ini</option>
+              <option value="week">7 hari terakhir</option>
+              <option value="month" selected>Bulan ini</option>
+            </select>
+            <input id="qLog" type="search" placeholder="Cari nama / No. Reg..." class="w-full sm:w-64 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-slate-900">
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="border-b border-slate-200 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                <th class="py-3 px-4">Waktu</th>
+                <th class="py-3 px-4">No. Reg</th>
+                <th class="py-3 px-4">Nama</th>
+                <th class="py-3 px-4">Keterangan</th>
+              </tr>
+            </thead>
+            <tbody id="tbLog" class="divide-y divide-slate-100 text-sm text-slate-700"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+  
+  <footer class="text-center py-8 border-t border-slate-200 text-xs text-slate-500">
+    <p>&copy; 2026 <strong class="text-slate-900">Mzhar Solution</strong>. Sistem Perizinan Santri NFC. | <a href="https://t.me/Admiin_Mzhar_Solution" target="_blank" class="text-emerald-600 font-semibold hover:underline">Hubungi via Telegram</a></p>
+  </footer>
+</div>
 
 <!-- EDIT DIALOG -->
-<dialog id="dlgEdit">
-  <h2>Edit Santri</h2>
-  <form id="formEdit" class="grid">
+<dialog id="dlgEdit" class="bento-card p-6 w-full max-w-lg shadow-2xl">
+  <h2 class="text-lg font-bold text-slate-900 mb-4">Edit Data Santri</h2>
+  <form id="formEdit" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
     <input type="hidden" name="id">
-    <div><label>No. Reg *</label><input name="no_reg" required></div>
-    <div><label>Nama *</label><input name="nama" required></div>
-    <div><label>Alamat</label><input name="alamat"></div>
-    <div><label>Asrama</label><input name="asrama"></div>
-    <div><label>Kamar</label><input name="kamar"></div>
-    <div><label>NFC UID</label><input name="nfc_uid" id="editUid" placeholder="Kosongkan jika belum ada"></div>
+    <div>
+      <label class="text-xs font-semibold text-slate-500 mb-1 block">No. Reg *</label>
+      <input name="no_reg" required class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-slate-900">
+    </div>
+    <div>
+      <label class="text-xs font-semibold text-slate-500 mb-1 block">Nama *</label>
+      <input name="nama" required class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-slate-900">
+    </div>
+    <div>
+      <label class="text-xs font-semibold text-slate-500 mb-1 block">Alamat</label>
+      <input name="alamat" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-slate-900">
+    </div>
+    <div>
+      <label class="text-xs font-semibold text-slate-500 mb-1 block">Asrama</label>
+      <input name="asrama" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-slate-900">
+    </div>
+    <div>
+      <label class="text-xs font-semibold text-slate-500 mb-1 block">Kamar</label>
+      <input name="kamar" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-slate-900">
+    </div>
+    <div>
+      <label class="text-xs font-semibold text-slate-500 mb-1 block">NFC UID</label>
+      <input name="nfc_uid" id="editUid" placeholder="Kosongkan jika belum ada" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-slate-900 font-mono">
+    </div>
   </form>
-  <div class="row">
-    <button class="btn" id="btnEditSave">Simpan perubahan</button>
-    <button class="btn sec" id="btnEditScan" type="button">Scan kartu baru</button>
-    <button class="btn sec" id="btnEditCancel" type="button">Batal</button>
+  <div class="mt-6 flex flex-wrap items-center justify-end gap-2">
+    <button type="button" id="btnEditCancel" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-xl transition-all">Batal</button>
+    <button type="button" id="btnEditScan" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-xl transition-all">Scan Kartu Baru</button>
+    <button type="button" id="btnEditSave" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold rounded-xl transition-all">Simpan</button>
   </div>
 </dialog>
-<div id="toast"></div>
 
-  <footer>
-  <p>&copy; 2026 <strong>Mzhar Solution</strong>. Sistem Perizinan Santri NFC. | <a href="https://t.me/Admiin_Mzhar_Solution" target="_blank">Hubungi via Telegram</a></p>
-</footer>
+<div id="toast" class="fixed bottom-4 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-sm px-4 py-2.5 rounded-xl shadow-xl hidden z-50 transition-all"></div>
 
 <script>
 /* ====== KONFIGURASI ====== */
